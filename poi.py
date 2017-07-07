@@ -7,7 +7,7 @@ class PoiCrawler(object):
     ak = 'GEPiAH9zkDx5oy4K1Vj7Znw8zmbGhY0M'
     poi_base_url = 'https://api.map.baidu.com/place/v2/search?query={}&page_size=20&page_num={}&scope=2&coord_type=1&bounds={}&output=json&ak={}'
     city_center_url = 'https://api.map.baidu.com/geocoder/v2/?address={}&output=json&ak={}'
-    # categories =['美食','酒店','购物','生活服务','丽人','旅游景点','休闲娱乐','运动健身','教育培训','文化传媒','医疗','汽车服务','交通设施','金融','房地产','公司企业','政府机构']
+    # categories 这样设置主要是为了在每次请求返回的poi total都尽量小于但接近400
     categories = ['中餐厅$外国餐厅$小吃快餐店$蛋糕甜品店$咖啡厅$茶座$酒吧$酒店$超市','购物中心$便利店$家居建材$家电数码$集市$宿舍$园区$农林园艺$厂矿','商铺$生活服务$交通设施$金融$住宅区','丽人$休闲娱乐$旅游景点$运动健身$教育培训$文化传媒$医疗$政府机构$汽车服务$写字楼','公司']
     distance_unit = 0.01
     steps = 100
@@ -90,7 +90,8 @@ class PoiCrawler(object):
         for rect in rect_list:
             self.get_poi_in_rect(rect)
         print('total',len(self.pois))
-
+    # TODO 全部获取以后才同一写到文件里面，不够安全，需要断点保护
+    # 流程： 获取城市中心点=》中心点开始划分小方块=》对每个方块的poi循环一次category=》保存所有poi
     def get_all_pois(self):
         self.get_city_center()
         self.get_rects_by_center()
