@@ -24,7 +24,7 @@ class FinalLogger:
             return FinalLogger.logger
         # log conf
         FinalLogger.logger = logging.Logger("poi_log")
-        # backup
+        # backup nothing mush
         log_handler = logging.handlers.RotatingFileHandler(filename = FinalLogger.log_file,
                                                            maxBytes = FinalLogger.log_max_byte,
                                                            backupCount = FinalLogger.log_backup_count)
