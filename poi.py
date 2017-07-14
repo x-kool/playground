@@ -42,9 +42,8 @@ class PoiCrawler(object):
     # categories 这样设置主要是为了在每次请求返回的poi total都尽量小于但接近400
     categories = ['中餐厅$外国餐厅$小吃快餐店$蛋糕甜品店$咖啡厅$茶座$酒吧$酒店$超市','购物中心$便利店$家居建材$家电数码$集市$宿舍$园区$农林园艺$厂矿','商铺$生活服务$交通设施$金融$住宅区','丽人$休闲娱乐$旅游景点$运动健身$教育培训$文化传媒$医疗$政府机构$汽车服务$写字楼','公司']
     distance_unit = 0.01
-    steps = 100
+    steps = 2
     rects = []
-    pois = []
     poi_ids=[]
     location = {}
     city_name = ''
@@ -56,7 +55,6 @@ class PoiCrawler(object):
 
 
     def __init__(self, city_name,process_number):
-        self.pois = [];
         self.city_name = city_name
         self.process_number = process_number
 
@@ -65,19 +63,16 @@ class PoiCrawler(object):
         try:
             r = requests.get(city_url, timeout=self.timeout).json()
             if r['status'] != 0:
-                self.logger.warning(r['message'])
-                print (r['message'])
+                msg = r['message'] if 'message' in r.keys() else r['msg'] 
+                self.logger.warning(self.city_name+':'+msg)
+                print (msg)
                 raise ValueError
             else:
                 self.location = r['result']['location']
-        except AttributeError:
-            self.logger.warning('wrong city input')
-            print ('wrong city input')
-            raise ValueError
         except requests.exceptions.RequestException:
-            self.logger.warning('response Error')
-            print ('response Error')            
-            raise ValueError
+            self.logger.warning(self.city_name+':Response Error')
+            print ('Response Error')            
+            raise ConnectionError
 
     def get_rects_by_center(self):
         lng = self.location['lng']
@@ -89,16 +84,18 @@ class PoiCrawler(object):
                 dist_lat = units_lat * self.distance_unit
                 self.rects.append('{:.3f},{:.3f},{:.3f},{:.3f}'.format(lat - dist_lat - self.distance_unit,   # rect 左下，右上 2个点坐标
                                                                        lng - dist_lng - self.distance_unit,
-                                                                       lat - dist_lat, lng - dist_lng))
+                                                                       lat - dist_lat, 
+                                                                       lng - dist_lng))
                 self.rects.append('{:.3f},{:.3f},{:.3f},{:.3f}'.format(lat - dist_lat - self.distance_unit, 
-                                                                       lng + dist_lng,
+                                                                       lng + dist_lng, 
                                                                        lat - dist_lat, 
                                                                        lng + dist_lng + self.distance_unit))
                 self.rects.append('{:.3f},{:.3f},{:.3f},{:.3f}'.format(lat + dist_lat, 
                                                                        lng - dist_lng - self.distance_unit,
                                                                        lat + dist_lat + self.distance_unit, 
                                                                        lng - dist_lng))
-                self.rects.append('{:.3f},{:.3f},{:.3f},{:.3f}'.format(lat + dist_lat, lng + dist_lng,
+                self.rects.append('{:.3f},{:.3f},{:.3f},{:.3f}'.format(lat + dist_lat, 
+                                                                       lng + dist_lng,
                                                                        lat + dist_lat + self.distance_unit,
                                                                        lng + dist_lng + self.distance_unit))
 
@@ -109,22 +106,26 @@ class PoiCrawler(object):
             try:
                 r = requests.get(poi_url, timeout=self.timeout).json()
                 if r['results'] and r['total']:
-                    self.save_pois(r['results'])
+                    self.save_and_write_pois(r['results'])
                     pages = round(r['total'] / 20) + 1
                     if pages > 1:
                         for page_num in range(1, pages):
                             other = requests.get(self.poi_base_url.format(category, page_num, rect, self.ak), timeout=self.timeout).json()
-                            self.save_pois(other['results']) 
+                            self.save_and_write_pois(other['results']) 
             except requests.exceptions.RequestException:
-                self.logger.warning('response Error')
-                pass
-            
-    def save_pois(self, new_pois):
-        # put it in list for now
-        self.pois.extend(new_pois)
-        self.write_pois_file()
-        self.total_num += len(self.pois)
-        self.pois = []
+                self.logger.warning(self.city_name+':Response Error')
+                print ('Response Error')    
+                raise ConnectionError
+                # raise ConnectionError
+
+    def save_and_write_pois(self, new_pois):
+        with open(self.city_name, 'a') as file:
+            for poi in new_pois:
+                if poi['uid'] not in self.poi_ids:
+                    self.poi_ids.append(poi['uid'])
+                    file.write(self.poi_to_string(poi))
+            file.close()   
+        self.total_num += len(new_pois)     
 
     def poi_to_string(self, poi):
         line = '\t'.join([poi['name'],
@@ -146,7 +147,6 @@ class PoiCrawler(object):
     def get_poi_in_rect_list(self,rect_list):
         for rect in rect_list:
             self.get_poi_in_rect(rect)
-        # print('total',len(self.pois))
         
     # TODO   全部获取以后才同一写到文件里面，不够安全，需要断点保护
     # 流程： 获取城市中心点=》中心点开始划分小方块=》对每个方块的poi循环一次category=》保存所有poi
@@ -165,14 +165,13 @@ class PoiCrawler(object):
         print('total',self.total_num)
         # self.write_pois_file()
 
-    def write_pois_file(self):
-        with open(self.city_name, 'a') as file:
-            for poi in self.pois:
-                if poi['uid'] not in self.poi_ids:
-                    self.poi_ids.append(poi['uid'])
-                    file.write(self.poi_to_string(poi))
-            file.close()
+
 
 if __name__ == '__main__':
-    crawler = PoiCrawler('合肥市',4)
+    crawler = PoiCrawler('西安',4)
     crawler.get_all_pois()
+
+
+
+
+
