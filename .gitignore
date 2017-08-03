@@ -3,8 +3,19 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Max
+.DS_Store
+
+# PyCharm
+.idea
+cover
+
+# VisualStudioCode
+.vscode/
+
 # C extensions
 *.so
+!read_dwg.so
 
 # Distribution / packaging
 .Python
@@ -88,4 +99,17 @@ ENV/
 # Rope project settings
 .ropeproject
 
-./idea
+# uploads
+xkool_site/static/uploads
+
+# static
+!xkool_site/static/css/lib
+!xkool_site/static/js/lib
+!xkool_site/static/swagger-ui/lib
+xkool_site/static/gen/
+
+# windows static files
+xkool_site/static/bases/
+
+# backups
+scripts/xkool.bak
