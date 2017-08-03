@@ -118,9 +118,14 @@ class PoiCrawler(object):
                     self.save_and_write_pois(r['results'])
                     pages = round(r['total'] / 20) + 1
                     if pages > 1:
-                        for page_num in range(1, pages):
+                        #for page_num in range(1, pages):
+                        total = 1
+                        page_num = 1
+                        while total != 0:
                             other = requests.get(self.poi_base_url.format(category, page_num, rect, self.ak), timeout=self.timeout).json()
-                            self.save_and_write_pois(other['results']) 
+                            self.save_and_write_pois(other['results'])
+                            page_num += 1
+                            total = other['total']
             except requests.exceptions.RequestException:
                 # self.logger.warning(self.city_name+':'+str(self.stop_unit_num)+':Response Error')
                 self.logger.warning('stop at [{}] rect unit in [{}] city with Response Error'.format(self.stop_unit_num, self.city_name))
@@ -133,7 +138,6 @@ class PoiCrawler(object):
                 if poi['uid'] not in self.poi_ids:
                     self.poi_ids.append(poi['uid'])
                     file.write(self.poi_to_string(poi))
-            file.close()   
         self.total_num += len(new_pois)     
 
     def poi_to_string(self, poi):
