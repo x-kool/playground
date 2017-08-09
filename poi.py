@@ -1,9 +1,22 @@
-# coding=utf-8
 import requests
 import json
 import threading
 import logging.handlers
 from retrying import retry
+
+def myAlign(string, length=0):
+    if length == 0:
+        return string
+    slen = len(string)
+    re = string
+    if isinstance(string, str):
+        placeholder = ' '
+    else:
+        placeholder = u'　'
+    while slen < length:
+        re += placeholder
+        slen += 1
+    return re
 
 class FinalLogger:
     logger = None
@@ -36,6 +49,7 @@ class FinalLogger:
         FinalLogger.logger.setLevel(FinalLogger.levels.get(FinalLogger.log_level))
         return FinalLogger.logger
 
+
 class PoiCrawler(object):
     ak = 'GEPiAH9zkDx5oy4K1Vj7Znw8zmbGhY0M'
     poi_base_url = 'https://api.map.baidu.com/place/v2/search?query={}&page_size=20&page_num={}&scope=2&coord_type=1&bounds={}&output=json&ak={}'
@@ -43,10 +57,10 @@ class PoiCrawler(object):
     # categories 这样设置主要是为了在每次请求返回的poi total都尽量小于但接近400
     #categories = ['中餐厅$外国餐厅$小吃快餐店$蛋糕甜品店$咖啡厅$茶座$酒吧$酒店$超市', '购物中心$便利店$家居建材$家电数码$集市$宿舍$园区$农林园艺$厂矿', '商铺$生活服务$交通设施$金融$住宅区',
     #              '丽人$休闲娱乐$旅游景点$运动健身$教育培训$文化传媒$医疗$政府机构$汽车服务$写字楼', '公司$学校']
-    categories = ['美食$餐厅$超市$酒店$公园','购物中心$便利店$园区$厂矿','商铺$地铁$公交$轻轨$停车场$火车站$机场','金融$住宅$美容$娱乐',
-                  '幼儿园$小学$中学$大学$教育$学校','医疗$政府机构$公司$文化$数码$银行']
+    categories = ['美食$餐厅$超市$酒店$公园$酒吧$咖啡厅$小吃$茶座', '购物中心$便利店$园区$厂矿', '商铺$地铁$公交$轻轨$停车场$火车站$机场', '金融$住宅$美容$娱乐$健身',
+                  '幼儿园$小学$中学$大学$教育$学校', '医疗$政府机构$公司$文化$数码$银行$写字楼$汽车']
     distance_unit = 0.005
-    steps = 10
+    steps = 100
     rects = []
     poi_ids = []
     location = {}
@@ -64,8 +78,7 @@ class PoiCrawler(object):
 
     def __init__(self,
                  city_name,
-                 process_number,
-                 ):
+                 process_number):
 
         self.city_name = city_name
         self.process_number = process_number
@@ -116,7 +129,6 @@ class PoiCrawler(object):
         for category in self.categories:
             poi_url = self.poi_base_url.format(category, 0, rect, self.ak)
             print(category, rect)
-            # TODO(Ke) page 这部分有问题，需要修改 [total] 参数是有问题的，并不准确
             try:
                 r = requests.get(poi_url, timeout=self.timeout).json()
                 if r['results'] and r['total']:
@@ -141,7 +153,7 @@ class PoiCrawler(object):
                 raise ConnectionError
 
     def save_and_write_pois(self, new_pois):
-        with open(self.city_name, 'a') as file:
+        with open('{}poi信息'.format(self.city_name), 'a') as file:
             for poi in new_pois:
                 if poi['uid'] not in self.poi_ids:
                     self.poi_ids.append(poi['uid'])
@@ -149,12 +161,12 @@ class PoiCrawler(object):
         self.total_num += len(new_pois)
 
     def poi_to_string(self, poi):
-        line = '\t'.join([poi['name'],
-                          str(poi['location']['lat']),
-                          str(poi['location']['lng']),
-                          poi.get('address', ' '),
-                          poi.get('telephone', ' '),
-                          poi['uid']])
+        line = '\t'.join([myAlign(poi['name'], 30),
+                          myAlign('%-.6f' % (poi['location']['lat']), 20),
+                          myAlign('%-.6f' % (poi['location']['lng']), 20),
+                          myAlign('%-30s' % (poi.get('address', ' ')), 20),
+                          myAlign('%-15s' % (poi.get('telephone', ' ')), 20),
+                          myAlign('%-20s' % (poi['uid']), 20)])
         # [[name][location][address][telephone][uid][category][detail_info][price][overall_rating][service_rating][environment_rating]]
         if poi.get('detail_info'):
             tags = poi['detail_info'].get('tag', '其他;其他').split(';')
