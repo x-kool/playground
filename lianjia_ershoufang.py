@@ -88,27 +88,29 @@ def get_info(url):
 
 
 def save_and_write_community_info(community, name=city_name):
-    with open('%s二手房房价信息' % name, 'a') as file:
+    with open('%s二手房信息(链家)' % name, 'a', encoding='utf-8') as file:
         print('正在写入：{}'.format(str(info_to_string(community))))
         file.write(info_to_string(community))
 
 
 def parse_info(html):
-    data = json.loads(html[43:-1])
-    if data and 'data' in data.keys():
-        return data['data']
+    if html:
+        data = json.loads(html[43:-1])
+        if data and 'data' in data.keys():
+            return data['data']
+    return None
 
 
 def info_to_string(community):
     space_num = 21 if len(community['name']) == 3 else 20
     line = '\t'.join(
                      [myAlign(community['name'], space_num),
-                      myAlign('%.6f' % (community['latitude']), 20),
-                      myAlign('%.6f' % (community['longitude']), 20),
-                      myAlign('%6s' % (community['avg_unit_price']), 20),
-                      myAlign('%20s' % (community['id']), 20),
-                      myAlign('%5s' % (community['house_count']), 20),
-                      myAlign('%5d' % (int(community['min_price_total'])), 20)]
+                      myAlign('%-.6f' % (community['latitude']), 20),
+                      myAlign('%-.6f' % (community['longitude']), 20),
+                      myAlign('%-6s' % (community['avg_unit_price']), 20),
+                      myAlign('%-20s' % (community['id']), 20),
+                      myAlign('%-5s' % (community['house_count']), 20),
+                      myAlign('%-5d' % (int(community['min_price_total'])), 20)]
                      )
     return line + '\n'
 
@@ -119,9 +121,9 @@ def get_all_community_price_info(rect_list):
         rect_url = get_url(rect)
         html = get_info(rect_url)
         data = parse_info(html)
-
-        for community in data:
-            save_and_write_community_info(community)
+        if data:
+            for community in data:
+                save_and_write_community_info(community)
 
 
 def main():

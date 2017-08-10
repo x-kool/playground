@@ -11,7 +11,7 @@ city_name = '重庆'
 city_center_url = 'https://api.map.baidu.com/geocoder/v2/?address={}&output=json&ak={}'
 timeout = 5
 
-steps = 3
+steps = 100
 distance_unit = 0.005
 rect_list = []
 
@@ -89,16 +89,18 @@ def get_info(url):
 
 
 def save_and_write_community_info(community, name=city_name):
-    with open('%s二手房房价信息(安居客)' % name, 'a') as file:
+    with open('%s二手房信息(安居客)' % name, 'a', encoding='utf-8') as file:
         print('正在写入：{}'.format(str(info_to_string(community))))
         file.write(info_to_string(community))
 
 
 def parse_info(html):
-    content = json.loads(html)
-    text = content['val']['comms']
-    return text
-
+    if html:
+        content = json.loads(html)
+        if content and 'val' in content:
+            text = content['val']['comms']
+            return text
+    return None
 
 def info_to_string(community):
     space_num = 21 if len(community['truncate_name']) == 3 else 20
@@ -122,9 +124,9 @@ def get_all_community_price_info(rect_list):
         rect_url = get_url(rect)
         html = get_info(rect_url)
         data = parse_info(html)
-
-        for community in data:
-            save_and_write_community_info(community)
+        if data:
+            for community in data:
+                save_and_write_community_info(community)
 
 
 def main():

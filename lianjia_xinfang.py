@@ -35,23 +35,24 @@ def get_info(url):
 
 
 def save_and_write_resblock_info(resblock):
-    with open('%s新楼盘信息' % city_name, 'a') as file:
-        print('正在写入：{}'.format(str(info_to_string(resblock))))
+    with open('%s楼盘信息(链家)' % city_name, 'a', encoding='utf-8') as file:
+        print(u'正在写入：{}'.format(str(info_to_string(resblock))))
         file.write(info_to_string(resblock))
 
 
 def parse_info(html):
-    data = json.loads(html[20:-1])
-    if data and 'data' in data.keys():
-        return data['data']
-
+    if html:
+        data = json.loads(html[20:-1])
+        if data and 'data' in data.keys():
+            return data['data']
+    return None
 
 def info_to_string(resblock):
-    space_num = 21 if len(resblock['name']) == 3 else 20
+    space_num = 21 if len(resblock['resblock_name']) == 3 else 20
     line = '\t'.join(
                      [myAlign(resblock['resblock_name'], space_num),
                       myAlign('%-20s' % (resblock['district_id']), 20),
-                      myAlign('%-10s' % (resblock['district_type']), 10),
+                      myAlign('%-10s' % (resblock['house_type']), 10),
                       myAlign('%-.6f' % (resblock['latitude']), 20),
                       myAlign('%-.6f' % (resblock['longitude']), 20),
                       myAlign('%-6s' % (resblock['average_price']), 20),
