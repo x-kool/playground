@@ -33,7 +33,7 @@ def get_city_center():
     city_url = city_center_url.format(city_name, ak)
     try:
         r = requests.get(city_url, timeout=timeout).json()
-        return  r['result']['location']
+        return r['result']['location']
     except:
         raise ConnectionError
 
@@ -89,7 +89,7 @@ def get_info(url):
 
 def save_and_write_community_info(community, name=city_name):
     with open('%s二手房信息(链家)' % name, 'a', encoding='utf-8') as file:
-        print('正在写入：{}'.format(str(info_to_string(community))))
+        # print('正在写入：{}'.format(str(info_to_string(community))))
         file.write(info_to_string(community))
 
 
@@ -103,20 +103,25 @@ def parse_info(html):
 
 def info_to_string(community):
     space_num = 21 if len(community['name']) == 3 else 20
+
+    # 链家的 key 名称可能有变化，bs_avg_unit_price 出现 key_error
+    unit_price = int(community['avg_unit_price']) if community['avg_unit_price'] else int(community['bs_avg_unit_price'])
     line = '\t'.join(
-                     [myAlign(community['name'], space_num),
-                      myAlign('%-.6f' % (community['latitude']), 20),
-                      myAlign('%-.6f' % (community['longitude']), 20),
-                      myAlign('%-6s' % (community['avg_unit_price']), 20),
-                      myAlign('%-20s' % (community['id']), 20),
-                      myAlign('%-5s' % (community['house_count']), 20),
-                      myAlign('%-5d' % (int(community['min_price_total'])), 20)]
-                     )
+        [myAlign(community['name'], space_num),
+         myAlign('%-.6f' % (community['latitude']), 20),
+         myAlign('%-.6f' % (community['longitude']), 20),
+         myAlign('%-6d' % (unit_price), 20),
+         myAlign('%-20s' % (community['id']), 20),
+         myAlign('%-5s' % (community['house_count']), 20),
+         myAlign('%-5d' % (int(community['min_price_total'])), 20)]
+    )
+    print('正在写入：{}'.format(str(myAlign(community['name'], space_num))))
     return line + '\n'
 
 
 def get_all_community_price_info(rect_list):
     get_rects_by_center()
+    total_num = 1
     for rect in rect_list:
         rect_url = get_url(rect)
         html = get_info(rect_url)
@@ -124,6 +129,8 @@ def get_all_community_price_info(rect_list):
         if data:
             for community in data:
                 save_and_write_community_info(community)
+                print('total num:'+ str(total_num))
+                total_num += 1
 
 
 def main():
@@ -131,4 +138,4 @@ def main():
 
 
 if __name__ == '__main__':
-        main()
+    main()
