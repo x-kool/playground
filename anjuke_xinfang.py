@@ -104,6 +104,7 @@ def parse_info(html):
             return text
     return None
 
+
 def info_to_string(community):
     space_num = 21 if len(community['loupan_name']) == 3 else 20
     residence_info = '\t'.join(['[户型: %-s  面积: %-2.f ]' % (i['alias'], float(i['area'])) for i in community['house_types']])

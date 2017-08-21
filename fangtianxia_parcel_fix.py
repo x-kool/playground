@@ -6,6 +6,7 @@ Created on Mon Aug 21 14:03:06 2017
 """
 
 import re
+import threading
 
 import requests
 import time
@@ -52,12 +53,14 @@ class FtxParcelCrawler(object):
     page_base_url = 'http://land.fang.com/market/500100________1_0_{}.html'
     parcel_base_url = 'http://land.fang.com'
     parcel_url_list = []
+    process_num = 4
 
     logger = FinalLogger.getLogger()
 
 
-    def __init__(self, city_name='重庆'):
+    def __init__(self, city_name='重庆',process_num=4):
         self.city_name = city_name
+        self.process_num = process_num
 
 
     def get_page_size(self):
@@ -169,22 +172,50 @@ class FtxParcelCrawler(object):
         print ('%-s' % (parcel_data['位置']))
         return line + '\n'
 
-
+# ====================================================
     def get_all_parcel_info(self):
         self.get_parcel_url_list()
         parcel_num = len(self.parcel_url_list)
-
-
         for parcel_url_num in range(parcel_num):
             parcel_data = self.get_parcel_data(self.parcel_url_list[parcel_url_num])
             self.save_and_write_parcel_data(parcel_data)
             print (str(parcel_url_num+1) + '/' + str(parcel_num))
 
+# ====================================================
 
-    def main(self):
-        self.get_all_parcel_info()
+    def get_parcel_info_in_url_list(self):
+        l = len(self.parcel_url_list)
+        for idx,url in enumerate(self.parcel_url_list):
+            self.get_parcel_data(url)
+            print (str(idx) + '/' + str(l))
+
+    def get_all_parcel_info_with_Thread(self):
+        self.get_parcel_url_list()
+        len_url_list = int( len(self.parcel_url_list) / self.process_num )+1
+        process_list = []
+        for i in range(self.process_num):
+            process = threading.Thread(target=self.get_parcel_info_in_url_list,
+                                       args=(self.parcel_url_list[i * len_url_list : (i+1) * len_url_list], ))
+            process.start()
+            process_list.append(process)
+
+        for process in process_list:
+            process.join()
+
+
+
+    def main(self, Thread):
+        start = time.clock()
+
+        if Thread == 0:
+            self.get_all_parcel_info()
+        elif Thread == 1:
+            self.get_all_parcel_info_with_Thread()
+
+        end = time.clock()
+        print ('运行时间：%-.2f s' % (end-start))
 
 
 if __name__ == '__main__':
-    crawler = FtxParcelCrawler('重庆')
-    crawler.main()
+    crawler = FtxParcelCrawler('重庆',4)
+    crawler.main(1)

@@ -4,19 +4,6 @@ import threading
 import logging.handlers
 from retrying import retry
 
-def myAlign(string, length=0):
-    if length == 0:
-        return string
-    slen = len(string)
-    re = string
-    if isinstance(string, str):
-        placeholder = ' '
-    else:
-        placeholder = u'　'
-    while slen < length:
-        re += placeholder
-        slen += 1
-    return re
 
 class FinalLogger:
     logger = None
@@ -60,7 +47,7 @@ class PoiCrawler(object):
     categories = ['美食$餐厅$超市$酒店$公园$酒吧$咖啡厅$小吃$茶座', '购物中心$便利店$园区$厂矿', '商铺$地铁$公交$轻轨$停车场$火车站$机场', '金融$住宅$美容$娱乐$健身',
                   '幼儿园$小学$中学$大学$教育$学校', '医疗$政府机构$公司$文化$数码$银行$写字楼$汽车']
     distance_unit = 0.005
-    steps = 100
+    steps = 5
     rects = []
     poi_ids = []
     location = {}
@@ -161,12 +148,12 @@ class PoiCrawler(object):
         self.total_num += len(new_pois)
 
     def poi_to_string(self, poi):
-        line = '\t'.join([myAlign(poi['name'], 30),
-                          myAlign('%-.6f' % (poi['location']['lat']), 20),
-                          myAlign('%-.6f' % (poi['location']['lng']), 20),
-                          myAlign('%-30s' % (poi.get('address', ' ')), 20),
-                          myAlign('%-15s' % (poi.get('telephone', ' ')), 20),
-                          myAlign('%-20s' % (poi['uid']), 20)])
+        line = '\t'.join([poi['name'],
+                          '%-.6f' % (poi['location']['lat']),
+                          '%-.6f' % (poi['location']['lng']),
+                          '%-s' % (poi.get('address', ' ')),
+                          '%-s' % (poi.get('telephone', ' ')),
+                          '%-s' % (poi['uid'])])
         # [[name][location][address][telephone][uid][category][detail_info][price][overall_rating][service_rating][environment_rating]]
         if poi.get('detail_info'):
             tags = poi['detail_info'].get('tag', '其他;其他').split(';')
