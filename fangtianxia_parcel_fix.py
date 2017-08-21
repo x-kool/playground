@@ -68,7 +68,7 @@ class FtxParcelCrawler(object):
         text = self.get_html(url)
         pattern = re.compile('</a><span>1/(.*?)</span><a class="paga28')
         page_size = re.findall(pattern, text)[0]
-        return page_size
+        return int(page_size)
 
 
 
@@ -130,7 +130,7 @@ class FtxParcelCrawler(object):
 
 
     def save_and_write_parcel_data(self, parcel_data):
-        with open('{}_房天下_地块_{}）'.format(self.city_name, self.get_date()), 'a', encoding='utf-8') as file:
+        with open('{}_房天下_地块_{}'.format(self.city_name, self.get_date()), 'a', encoding='utf-8') as file:
             # print('正在写入：{}'.format(str(info_to_string(parcel_data))))
             file.write(self.info_to_string(parcel_data))
 
@@ -183,15 +183,17 @@ class FtxParcelCrawler(object):
 
 # ====================================================
 
-    def get_parcel_info_in_url_list(self):
-        l = len(self.parcel_url_list)
-        for idx,url in enumerate(self.parcel_url_list):
-            self.get_parcel_data(url)
+    def get_parcel_info_in_url_list(self, parcel_url_sub_list):
+        l = len(parcel_url_sub_list)
+        for idx,url in enumerate(parcel_url_sub_list):
+            parcel_data = self.get_parcel_data(url)
+            self.save_and_write_parcel_data(parcel_data)
             print (str(idx) + '/' + str(l))
+
 
     def get_all_parcel_info_with_Thread(self):
         self.get_parcel_url_list()
-        len_url_list = int( len(self.parcel_url_list) / self.process_num )+1
+        len_url_list = int( len(self.parcel_url_list) / self.process_num )
         process_list = []
         for i in range(self.process_num):
             process = threading.Thread(target=self.get_parcel_info_in_url_list,
@@ -201,7 +203,6 @@ class FtxParcelCrawler(object):
 
         for process in process_list:
             process.join()
-
 
 
     def main(self, Thread):
