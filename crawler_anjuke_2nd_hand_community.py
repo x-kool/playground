@@ -1,45 +1,15 @@
 import json
 import threading
-
 import requests
 import time
 from requests import RequestException
 from retrying import retry
-import logging.handlers
+from logger import FinalLogger
+
+from util import get_city_center,get_rects_by_center
 
 
-class FinalLogger:
-    logger = None
-    levels = {"n": logging.NOTSET,
-              "d": logging.DEBUG,
-              "i": logging.INFO,
-              "w": logging.WARN,
-              "e": logging.ERROR,
-              "c": logging.CRITICAL}
-
-    log_level = "w"
-    log_file = "LJ_2nd_Com.log"
-    log_max_byte = 10 * 1024 * 1024
-    log_backup_count = 5
-
-    @staticmethod
-    def getLogger():
-        if FinalLogger.logger is not None:
-            return FinalLogger.logger
-        # log conf
-        FinalLogger.logger = logging.Logger("poi_log")
-        # backup nothing mush
-        log_handler = logging.handlers.RotatingFileHandler(filename=FinalLogger.log_file,
-                                                           maxBytes=FinalLogger.log_max_byte,
-                                                           backupCount=FinalLogger.log_backup_count)
-        # format
-        log_fmt = logging.Formatter("[%(asctime)s][%(levelname)s][%(name)s][%(funcName)s][%(message)s]")
-        log_handler.setFormatter(log_fmt)
-        FinalLogger.logger.addHandler(log_handler)
-        FinalLogger.logger.setLevel(FinalLogger.levels.get(FinalLogger.log_level))
-        return FinalLogger.logger
-
-class AJK2ndCommCrawler(object):
+class AJK2ndCommunityCrawler(object):
     headers = {'User-Agent': "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36"}
 
     ak = 'GEPiAH9zkDx5oy4K1Vj7Znw8zmbGhY0M'
@@ -68,34 +38,13 @@ class AJK2ndCommCrawler(object):
             raise ConnectionError
 
 
-    def get_rects_by_center(self):
+    def get_rect_list(self):
         location = self.get_city_center()
-        lng = location['lng']  # city center [lat, lng]
-        lat = location['lat']
-        # 经纬度+-1.2度范围
-        for units_lng in range(self.steps):
-            dist_lng = units_lng * self.distance_unit
-            for units_lat in range(self.steps):
-                dist_lat = units_lat * self.distance_unit
-                self.rect_list.append(['%.6f' % (lat - dist_lat - self.distance_unit),
-                                       '%.6f' % (lat - dist_lat),
-                                       '%.6f' % (lng - dist_lng - self.distance_unit),
-                                       '%.6f' % (lng - dist_lng)])
+        rect_list = self.get_rects_by_center(location)
 
-                self.rect_list.append(['%.6f' % (lat - dist_lat - self.distance_unit),
-                                       '%.6f' % (lat - dist_lat),
-                                       '%.6f' % (lng + dist_lng),
-                                       '%.6f' % (lng + dist_lng + self.distance_unit)])
 
-                self.rect_list.append(['%.6f' % (lat + dist_lat),
-                                       '%.6f' % (lat + dist_lat + self.distance_unit),
-                                       '%.6f' % (lng - dist_lng - self.distance_unit),
-                                       '%.6f' % (lng - dist_lng)])
-
-                self.rect_list.append(['%.6f' % (lat + dist_lat),
-                                       '%.6f' % (lat + dist_lat + self.distance_unit),
-                                       '%.6f' % (lng + dist_lng),
-                                       '%.6f' % (lng + dist_lng + self.distance_unit)])
+# ======
+# 這裡需要的rect的格式： lat_min,lat_max,lng_min,lng_max
 
 
     def get_url(self, rect):
@@ -205,5 +154,5 @@ class AJK2ndCommCrawler(object):
 
 
 if __name__ == '__main__':
-    crawler = AJK2ndCommCrawler('重庆',4)
+    crawler = AJK2ndCommunityCrawler('重庆',4)
     crawler.main(1)
