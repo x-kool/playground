@@ -1,24 +1,24 @@
-import requests
 import time
+
+import requests
 from requests import RequestException
 from retrying import retry
 
 from constant import city_center_url_pattern, ak, timeout, steps, distance_unit, headers
 
 
-def get_city_center_location_with_city(city_name):
+def get_city_center_lng_lat_by_city_name(city_name):
     city_url = city_center_url_pattern.format(city_name, ak)
     try:
         response = requests.get(city_url, timeout=timeout)
         response_dict = response.json()
-        return response_dict['result']['location']
+        location = response_dict['result']['location']
+        return location['lng'], location['lat']
     except:
         raise ConnectionError
 
 
-def get_rects_by_center(location):
-    lng = location['lng']  # city center [lat, lng]
-    lat = location['lat']
+def get_rects_by_lng_lat(lng, lat):
     # 经纬度+-1.2度范围
     rect_list = []
     for units_lng in range(steps):
@@ -47,9 +47,9 @@ def get_rects_by_center(location):
     return rect_list
 
 
-def get_rect_list_with_city(city_name):
-    location = get_city_center_location_with_city(city_name)
-    rect_list = get_rects_by_center(location)
+def get_rect_list_with_city_name(city_name):
+    lng, lat = get_city_center_lng_lat_by_city_name(city_name)
+    rect_list = get_rects_by_lng_lat(lng, lat)
     return rect_list
 
 
