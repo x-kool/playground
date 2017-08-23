@@ -1,6 +1,7 @@
 import time
-
+import os
 import requests
+import tablib
 from requests import RequestException
 from retrying import retry
 
@@ -18,8 +19,7 @@ def get_city_center_lng_lat_by_city_name(city_name):
         raise ConnectionError
 
 
-
-def get_rects_by_lng_lat(lng, lat):
+def get_rect_list_by_lng_lat(lng, lat):
     # 经纬度+-1.2度范围
     rect_list = []
     for units_lng in range(steps):
@@ -48,10 +48,9 @@ def get_rects_by_lng_lat(lng, lat):
     return rect_list
 
 
-
 def get_rect_list_with_city_name(city_name):
     lng, lat = get_city_center_lng_lat_by_city_name(city_name)
-    rect_list = get_rects_by_lng_lat(lng, lat)
+    rect_list = get_rect_list_by_lng_lat(lng, lat)
     return rect_list
 
 
@@ -72,13 +71,16 @@ def get_date():
     return date
 
 
-
-def get_raw_data_file_path(city_name, source_name, service_life):
+def get_raw_data_file_path(city_name, source_name, data_type_label):
     date = get_date()
-    file_path = '{}_{}_{}_{}.tsv'.format(city_name, source_name, service_life, date)
+    path = "\\".join( [os.path.dirname(os.getcwd()), 'data', str(date)])
+    if not os.path.exists(path):
+        os.makedirs(path)
+    file_path = path + '\{}_{}_{}_{}.txt'.format(city_name, source_name, data_type_label, date)
     return file_path
 
 
 def save_raw_data_in_tsv_file(file_path, data):
+    formed_data = tablib.Dataset(data.values())
     with open(file_path, 'a', encoding='utf-8') as file:
-        file.write(data.tsv)
+        file.write(formed_data.tsv)
