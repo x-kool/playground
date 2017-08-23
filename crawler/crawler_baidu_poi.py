@@ -41,9 +41,11 @@ class PoiCrawler(object):
     ak = 'GEPiAH9zkDx5oy4K1Vj7Znw8zmbGhY0M'
     poi_base_url = 'https://api.map.baidu.com/place/v2/search?query={}&page_size=20&page_num={}&scope=2&coord_type=1&bounds={}&output=json&ak={}'
     city_center_url = 'https://api.map.baidu.com/geocoder/v2/?address={}&output=json&ak={}'
+    # categories 这样设置主要是为了在每次请求返回的poi total都尽量小于但接近400
+    #categories = ['中餐厅$外国餐厅$小吃快餐店$蛋糕甜品店$咖啡厅$茶座$酒吧$酒店$超市', '购物中心$便利店$家居建材$家电数码$集市$宿舍$园区$农林园艺$厂矿', '商铺$生活服务$交通设施$金融$住宅区',
+    #              '丽人$休闲娱乐$旅游景点$运动健身$教育培训$文化传媒$医疗$政府机构$汽车服务$写字楼', '公司$学校']
     categories = ['美食$餐厅$超市$酒店$公园$酒吧$咖啡厅$小吃$茶座', '购物中心$便利店$园区$厂矿', '商铺$地铁$公交$轻轨$停车场$火车站$机场', '金融$住宅$美容$娱乐$健身',
                   '幼儿园$小学$中学$大学$教育$学校', '医疗$政府机构$公司$文化$数码$银行$写字楼$汽车']
-
     distance_unit = 0.005
     steps = 5
     rects = []
