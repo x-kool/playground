@@ -1,3 +1,4 @@
+import threading
 import time
 import os
 import requests
@@ -5,7 +6,7 @@ import tablib
 from requests import RequestException
 from retrying import retry
 
-from constant import city_center_url_pattern, ak, timeout, steps, distance_unit, headers
+from constant import city_center_url_pattern, ak, timeout, steps, distance_unit, headers, process_num
 
 
 def get_city_center_lng_lat_by_city_name(city_name):
@@ -66,6 +67,19 @@ def get_response_text_with_url(url):
         return None
 
 
+def crawl_raw_data_with_thread(func_name, city_name):
+    rect_list = get_rect_list_with_city_name(city_name)
+    len_of_sub_rect_list_for_thread = int(len(rect_list) / process_num)
+    process_list = []
+    for i in range(process_num):
+        process = threading.Thread(target=func_name,
+                                   args=(rect_list[i * len_of_sub_rect_list_for_thread: (i+1) * len_of_sub_rect_list_for_thread],
+                                         city_name))
+        process.start()
+        process_list.append(process)
+    for process in process_list:
+        process.join()
+
 def get_date():
     date = time.strftime("%Y_%m_%d", time.localtime())
     return date
@@ -73,7 +87,7 @@ def get_date():
 
 def get_raw_data_file_path(city_name, source_name, data_type_label):
     date = get_date()
-    path = "\\".join( [os.path.dirname(os.getcwd()), 'data', str(date)])
+    path = "\\".join( [os.path.dirname(os.getcwd()), 'data', city_name, str(date)])
     if not os.path.exists(path):
         os.makedirs(path)
     file_path = path + '\{}_{}_{}_{}.txt'.format(city_name, source_name, data_type_label, date)
