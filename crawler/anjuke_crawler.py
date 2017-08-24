@@ -2,10 +2,10 @@ import json
 import time
 from pypinyin import lazy_pinyin
 
-from constant import source_name_anjuke, second_hand, anjuke_2nd_community_url_pattern, \
-    anjuke_new_community_url_pattern, first_hand
+from constant import ANJUKE_SOURCE_NAME, SECOND_HAND_COMMUNITY_LABEL, anjuke_2nd_community_url_pattern, \
+    anjuke_new_community_url_pattern, NEW_COMMUNITY_LABEL
 from util import save_raw_data_in_tsv_file, get_response_text_with_url, get_raw_data_file_path, \
-    crawl_raw_data_with_thread
+    crawl_raw_data_by_thread_with_rect_list_func_and_city_name
 
 
 def crawl_anjuke_raw_data(city_name):
@@ -16,11 +16,11 @@ def crawl_anjuke_raw_data(city_name):
 
 # TODO(Ke) 把四部分数据和后面的接口打通以后，补充单套二手房信息
 def crawl_anjuke_new_community_raw_data(city_name):
-    crawl_raw_data_with_thread(crawl_new_community_raw_data_with_rect_list, city_name)
+    crawl_raw_data_by_thread_with_rect_list_func_and_city_name(crawl_new_community_raw_data_with_rect_list, city_name)
 
 
 def crawl_anjuke_second_hand_community_raw_data(city_name):
-    crawl_raw_data_with_thread(crawl_second_community_raw_data_with_rect_list, city_name)
+    crawl_raw_data_by_thread_with_rect_list_func_and_city_name(crawl_second_community_raw_data_with_rect_list, city_name)
 
 
 def crawl_anjuke_second_hand_single_apt_raw_data():
@@ -32,8 +32,8 @@ def crawl_new_community_raw_data_with_rect_list(rect_list, city_name):
     for idx,rect in enumerate(rect_list):
         community_list = get_anjuke_new_community_list_with_rect(rect)
         for community in community_list:
-            data = get_useful_element_in_raw_data_for_new_community(community)
-            file_path = get_raw_data_file_path(city_name, source_name_anjuke, first_hand)
+            data = filter_for_anjuke_new_community_raw_data(community)
+            file_path = get_raw_data_file_path(city_name, ANJUKE_SOURCE_NAME, NEW_COMMUNITY_LABEL)
             save_raw_data_in_tsv_file(file_path, data)
         print(str(idx) + '/' + str(10000))
 
@@ -53,7 +53,7 @@ def crawl_second_community_raw_data_with_rect_list(rect_list, city_name):
     for rect in rect_list:
         community_list = get_anjuke_second_hand_community_list_with_rect(city_name, rect)
         for community in community_list:
-            file_path = get_raw_data_file_path(city_name, source_name_anjuke, second_hand)
+            file_path = get_raw_data_file_path(city_name, ANJUKE_SOURCE_NAME, SECOND_HAND_COMMUNITY_LABEL)
             save_raw_data_in_tsv_file(file_path, community)
 
 
@@ -74,7 +74,7 @@ def get_anjuke_second_hand_community_list_with_rect(city_name, rect):
     return []
 
 
-def get_useful_element_in_raw_data_for_new_community(community):
+def filter_for_anjuke_new_community_raw_data(community):
     residence_info = ','.join(['[户型: %-s  面积: %-2.f ]' % (detail['alias'], float(detail['area'])) for detail in community['house_types']])
     data = {'loupan_name': community['loupan_name'],
             'loupan_id': community['loupan_id'],
@@ -92,7 +92,8 @@ def get_useful_element_in_raw_data_for_new_community(community):
 '''
 if __name__ == '__main__':
     start = time.clock()
-    crawl_anjuke_new_community_raw_data('重庆')
+    #crawl_anjuke_new_community_raw_data('重庆')
+    crawl_anjuke_second_hand_community_raw_data('重庆')
     end = time.clock()
     print('运行时间：%-.2f s' % (end - start))
-'''
+#'''

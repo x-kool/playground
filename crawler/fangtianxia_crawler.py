@@ -3,16 +3,16 @@ import threading
 from bs4 import BeautifulSoup
 import time
 
-from constant import fangtianxia_city_number, fangtianxia_page_url_pattern, fangtianxia_parcel_url_pattern, process_num, \
-    source_name_fangtianxia, parcel
+from constant import FANGTIANXIA_CITY_NUM_TRANSFER, fangtianxia_page_url_pattern, fangtianxia_parcel_url_pattern, THREAD_PROCESS_NUM, \
+    FANGTIANXIA_SOURCE_NAME, PARCEL_LABEL
 from util import get_response_text_with_url, get_raw_data_file_path, save_raw_data_in_tsv_file
 
 
 def crawl_fangtianxia_parcel_raw_data(city_name):
     url_list = get_parcel_url_list(city_name)
-    len_of_sub_url_list_for_thread = int(len(url_list) / process_num)
+    len_of_sub_url_list_for_thread = int(len(url_list) / THREAD_PROCESS_NUM)
     process_list = []
-    for i in range(process_num):
+    for i in range(THREAD_PROCESS_NUM):
         process = threading.Thread(target=crawl_parcel_raw_data_with_parcel_url_list,
                                    args=(url_list[i * len_of_sub_url_list_for_thread: (i+1) * len_of_sub_url_list_for_thread],
                                          city_name))
@@ -25,7 +25,7 @@ def crawl_fangtianxia_parcel_raw_data(city_name):
 def crawl_parcel_raw_data_with_parcel_url_list(url_list, city_name):
     for parcel_url in url_list:
         parcel_raw_data = get_parcel_raw_data_with_parcel_url(parcel_url)
-        file_path = get_raw_data_file_path(city_name, source_name_fangtianxia, parcel)
+        file_path = get_raw_data_file_path(city_name, FANGTIANXIA_SOURCE_NAME, PARCEL_LABEL)
         save_raw_data_in_tsv_file(file_path, parcel_raw_data)
 
 
@@ -58,7 +58,7 @@ def get_parcel_url_list(city_name):
     page_size = get_page_size(city_name)
     parcel_url_list = []
     for page_num in range(1, page_size+1):
-        url = fangtianxia_page_url_pattern.format(fangtianxia_city_number[city_name],page_num)
+        url = fangtianxia_page_url_pattern.format(FANGTIANXIA_CITY_NUM_TRANSFER[city_name], page_num)
         text = get_response_text_with_url(url)
         soup = BeautifulSoup(text)
         for i in soup.select('h3'):
@@ -68,7 +68,7 @@ def get_parcel_url_list(city_name):
 
 
 def get_page_size(city_name):
-    city_name_num = fangtianxia_city_number[city_name]
+    city_name_num = FANGTIANXIA_CITY_NUM_TRANSFER[city_name]
     url = fangtianxia_page_url_pattern.format(str(city_name_num), '1')
     text = get_response_text_with_url(url)
     pattern = re.compile('</a><span>1/(.*?)</span><a class="paga28')
@@ -81,4 +81,4 @@ if __name__ == '__main__':
     crawl_fangtianxia_parcel_raw_data('重庆')
     end = time.clock()
     print('运行时间：%-.2f s' % (end - start))
-'''
+#'''
