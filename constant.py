@@ -2,20 +2,7 @@
 TIMEOUT = 5
 STEP_NUM = 50
 UNIT_DISTANCE = 0.01
-THREAD_PROCESS_NUM = 4
-
-# source name
-ANJUKE_SOURCE_NAME = '安居客'
-LIANJIA_SOURCE_NAME= '链家'
-BAIDU_SOURCE_NAME= '百度'
-FANGTIANXIA_SOURCE_NAME= '房天下'
-
-# data type label
-SECOND_HAND_COMMUNITY_LABEL = '小区_二手'
-NEW_COMMUNITY_LABEL = '小区_一手'
-BAIDU_POI_LABEL = 'poi'
-PARCEL_LABEL = '地块'
-SINGLE_SECOND_HAND_APARTMENT_LABEL = '单套_二手'
+THREAD_NUM = 4
 
 # headers
 HEADERS = {'User-Agent': "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36"}

@@ -76,7 +76,8 @@ def get_lianjia_second_hand_community_list_with_rect(rect):
 
 def filter_for_lianjia_new_community_raw_data(community):
     data = {'community_name': community['resblock_name'],
-            'community_id': community['district_id'],
+            'house_type': community['house_type'],
+            'community_id': community['resblock_id'],
             'lat': community['latitude'],
             'lng': community['longitude'],
             'avg_price': community['average_price'],
@@ -87,7 +88,7 @@ def filter_for_lianjia_new_community_raw_data(community):
     return data
 
 
-'''
+#'''
 if __name__ == '__main__':
     start = time.clock()
     # crawl_lianjia_second_hand_community_raw_data('重庆')

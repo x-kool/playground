@@ -51,17 +51,20 @@ def get_baidu_poi_url(category, rect):
 
 def filter_for_baidu_poi_raw_data(poi):
     data = {'name': poi['name'],
+            'uid': poi['uid'],
             'lat': poi['location']['lat'],
-            'lng': poi['location']['lng'],
-            'address': poi['address'],
-            'uid': poi['uid']}
+            'lng': poi['location']['lng']}
     if poi.get('detail_info'):
         tags = poi['detail_info'].get('tag', '其他;其他').split(';')
         data['category'] = tags[0]
         data['sub_category'] = tags[1] if len(tags) > 1 else '其他'
+        data['type'] = poi['detail_info']['type'] if poi['detail_info'].get('type') else ''
+        data['navi_location'] = poi['detail_info']['navi_location'] if poi['detail_info'].get('navi_location') else ''
+    data['address'] = poi['address'] if poi.get('address') else ''
+    data['street_id'] = poi['street_id'] if poi.get('street_id') else ''
     return data
 
-'''
+#'''
 if __name__ == '__main__':
     start = time.clock()
     crawl_baidu_raw_data('重庆')

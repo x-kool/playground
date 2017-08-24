@@ -3,23 +3,23 @@ import threading
 from bs4 import BeautifulSoup
 import time
 
-from constant import FANGTIANXIA_CITY_NUM_TRANSFER, fangtianxia_page_url_pattern, fangtianxia_parcel_url_pattern, THREAD_PROCESS_NUM, \
+from constant import FANGTIANXIA_CITY_NUM_TRANSFER, fangtianxia_page_url_pattern, fangtianxia_parcel_url_pattern, THREAD_NUM, \
     FANGTIANXIA_SOURCE_NAME, PARCEL_LABEL
 from util import get_response_text_with_url, get_raw_data_file_path, save_raw_data_in_tsv_file
 
 
 def crawl_fangtianxia_parcel_raw_data(city_name):
     url_list = get_parcel_url_list(city_name)
-    len_of_sub_url_list_for_thread = int(len(url_list) / THREAD_PROCESS_NUM)
-    process_list = []
-    for i in range(THREAD_PROCESS_NUM):
-        process = threading.Thread(target=crawl_parcel_raw_data_with_parcel_url_list,
+    len_of_sub_url_list_for_thread = int(len(url_list) / THREAD_NUM)
+    thread_list = []
+    for i in range(THREAD_NUM):
+        thread = threading.Thread(target=crawl_parcel_raw_data_with_parcel_url_list,
                                    args=(url_list[i * len_of_sub_url_list_for_thread: (i+1) * len_of_sub_url_list_for_thread],
                                          city_name))
-        process.start()
-        process_list.append(process)
-    for process in process_list:
-        process.join()
+        thread.start()
+        thread_list.append(thread)
+    for thread in thread_list:
+        thread.join()
 
 
 def crawl_parcel_raw_data_with_parcel_url_list(url_list, city_name):
