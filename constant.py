@@ -1,6 +1,6 @@
 # crawler config for thread with rect list
 TIMEOUT = 5
-STEP_NUM = 50
+STEP_NUM = 10
 UNIT_DISTANCE = 0.01
 THREAD_NUM = 4
 

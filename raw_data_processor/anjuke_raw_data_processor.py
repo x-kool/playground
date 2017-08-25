@@ -1,73 +1,66 @@
-import json
 import os
 import re
 
-import tablib
 import time
-
-from crawler.base_crawler import CrawlerSourceName, CrawlerDataType
-from util import get_raw_data_file_path, get_date, isWindowsSystem
+from pypinyin import lazy_pinyin
+import pandas as pd
+from crawler.base_crawler import CrawlerSourceName, CrawlerDataLabel, CrawlerDataType
+from util import get_date, isWindowsSystem, get_file_path
 
 
 def process_anjuke_new_community_raw_data(city_name):
-    line_list = get_line_list(city_name)
-    for line in line_list:
-        data = filter_for_anjuke_new_community_raw_data(line)
-        file_path = get_ready_data_file_path(city_name, CrawlerSourceName.ANJUKE.value, CrawlerDataType.NEW_COMMUNITY.value)
-        save_ready_data_in_tsv_file(file_path, data)
+    read_file_path = get_file_path(city_name, CrawlerDataType.RAW_DATA.value, CrawlerSourceName.ANJUKE.value, CrawlerDataLabel.NEW_COMMUNITY.value)
+    save_file_path = get_file_path(city_name, CrawlerDataType.READY_DATA.value, CrawlerSourceName.ANJUKE.value, CrawlerDataLabel.NEW_COMMUNITY.value)
+    raw_data = pd.read_table(read_file_path)
+    ready_data = process_raw_data_to_ready(raw_data)
+    ready_data.to_csv(path_or_buf=save_file_path, sep='\t', encoding='utf-8')
 
 
-def filter_for_anjuke_new_community_raw_data(raw_data_line):
-    residence_info = raw_data_line[33]
+def process_raw_data_to_ready(raw_data):
+    transfer_house_type(raw_data)
+    ready_data = raw_data[['address',
+                           'baidu_lat',
+                           'baidu_lng',
+                           'build_type',
+                           'developer',
+                           'fitment_type',
+                           'house_types',
+                           'kaipan_new_date',
+                           'loupan_id',
+                           'loupan_name',
+                           'metro_info',
+                           'new_price',
+                           'prop_num',
+                           'region_title',
+                           'sub_region_title']]
+    return ready_data
+
+
+def transfer_house_type(raw_data):
+    house_types = raw_data['house_types']
     pattern = re.compile("'alias': '(.*?)'.*?'area': '(.*?)',")
-    residence_info_ready = re.findall(pattern, residence_info)
-    data = {'loupan_name': raw_data_line[8],
-            'loupan_id': raw_data_line[6],
-            'build_type': raw_data_line[16],
-            'lat': raw_data_line[18],
-            'lng': raw_data_line[19],
-            'address': raw_data_line[10],
-            'fitment_type': raw_data_line[15],
-            'new_price': raw_data_line[4],
-            'is_sales_promotion': raw_data_line[32],
-            'kaipan_new_date': raw_data_line[23],
-            'residence_info': str(residence_info_ready)
-            }
-    return data
+    for idx, house_type in enumerate(house_types):
+        residence_info_ready = re.findall(pattern, house_type)
+        house_types.loc[idx] = str(residence_info_ready)
+        print(idx, str(residence_info_ready))
 
 
-def get_line_list(city_name):
-    file_path = get_raw_data_file_path(city_name, CrawlerSourceName.ANJUKE.value, CrawlerDataType.NEW_COMMUNITY.value)
-    with open(file_path, 'r', encoding='utf-8') as file:
-    #with open(file_path, 'r') as file:
-        line_list = []
-        for line in file.readlines():
-            if line != '\n':
-                line_list.append(line)
-    new_line_list = [line.split('\t') for line in line_list]
-    return new_line_list
-
-
-def get_ready_data_file_path(city_name, source_name, data_type_label):
+def get_ready_data_file_path(city_name, data_type, source_name, data_label):
     date = get_date()
-    path = os.path.join(os.path.dirname(os.getcwd()), 'ready_data', city_name, str(date))
+    city_name_pinyin = ''.join(lazy_pinyin(city_name))
+    path = os.path.join(os.path.dirname(os.getcwd()), data_type, city_name_pinyin, str(date))
     if not os.path.exists(path):
         os.makedirs(path)
-    file_path = path + '\{}_{}_{}_{}.txt'.format(city_name, source_name, data_type_label, date)
+    file_path = path + '\{}_{}_{}_{}.tsv'.format(city_name_pinyin, source_name, data_label, date)
     if not isWindowsSystem():
         Linux_file_path = file_path.replace('\\', '/')
         return Linux_file_path
     return file_path
 
-
-def save_ready_data_in_tsv_file(file_path, data):
-    formed_data = tablib.Dataset(data.values())
-    with open(file_path, 'a', encoding='utf-8') as file:
-        file.write(formed_data.tsv)
-
+#'''
 if __name__ == '__main__':
     start = time.clock()
-
     process_anjuke_new_community_raw_data('重庆')
     end = time.clock()
     print('运行时间：%-.2f s' % (end - start))
+#'''

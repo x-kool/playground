@@ -5,7 +5,7 @@ import time
 from constant import lianjia_second_hand_community_url_pattern, LIANJIA_SOURCE_NAME, SECOND_HAND_COMMUNITY_LABEL, \
     cq_url_for_lianjia_city_list, \
     lianjia_new_community_url_pattern, NEW_COMMUNITY_LABEL, STEP_NUM
-from util import get_response_text_with_url, get_raw_data_file_path, \
+from util import get_response_text_with_url, get_file_path, \
     save_raw_data_in_tsv_file, crawl_raw_data_by_thread_with_rect_list_func_and_city_name
 
 
@@ -24,7 +24,7 @@ def crawl_lianjia_new_community_raw_data(city_name):
     for community_list in community_data.values():
         for community in community_list:
             data = filter_for_lianjia_new_community_raw_data(community)
-            file_path = get_raw_data_file_path(city_name, LIANJIA_SOURCE_NAME, NEW_COMMUNITY_LABEL)
+            file_path = get_file_path(city_name, LIANJIA_SOURCE_NAME, NEW_COMMUNITY_LABEL)
             save_raw_data_in_tsv_file(file_path, data)
 
 
@@ -59,7 +59,7 @@ def crawl_raw_data_with_rect_list(rect_list, city_name):
     for idx,rect in enumerate(rect_list):
         community_list = get_lianjia_second_hand_community_list_with_rect(rect)
         for community in community_list:
-            file_path = get_raw_data_file_path(city_name, LIANJIA_SOURCE_NAME, SECOND_HAND_COMMUNITY_LABEL)
+            file_path = get_file_path(city_name, LIANJIA_SOURCE_NAME, SECOND_HAND_COMMUNITY_LABEL)
             save_raw_data_in_tsv_file(file_path, community)
         print(str(idx) + '/' + str(STEP_NUM**2))
 

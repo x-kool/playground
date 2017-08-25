@@ -4,7 +4,7 @@ from retrying import retry
 
 from constant import BAIDU_POI_CATEGORIES, BAIDU_API_AK, baidu_poi_url_pattern, TIMEOUT, BAIDU_SOURCE_NAME, \
     BAIDU_POI_LABEL, STEP_NUM
-from util import get_raw_data_file_path, save_raw_data_in_tsv_file, \
+from util import get_file_path, save_raw_data_in_tsv_file, \
     crawl_raw_data_by_thread_with_rect_list_func_and_city_name
 
 # global variable to recognise whether poi is stored
@@ -20,7 +20,7 @@ def crawl_poi_raw_data_with_rect_list(rect_list, city_name):
         for category in BAIDU_POI_CATEGORIES:
             poi_list = get_baidu_poi_list(category, rect)
             for poi in poi_list:
-                file_path = get_raw_data_file_path(city_name, BAIDU_SOURCE_NAME, BAIDU_POI_LABEL)
+                file_path = get_file_path(city_name, BAIDU_SOURCE_NAME, BAIDU_POI_LABEL)
                 if poi['uid'] not in stored_poi_uid_list:
                     stored_poi_uid_list.append(poi['uid'])
                     data = filter_for_baidu_poi_raw_data(poi)

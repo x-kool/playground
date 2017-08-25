@@ -5,7 +5,7 @@ import time
 
 from constant import FANGTIANXIA_CITY_NUM_TRANSFER, fangtianxia_page_url_pattern, fangtianxia_parcel_url_pattern, THREAD_NUM, \
     FANGTIANXIA_SOURCE_NAME, PARCEL_LABEL
-from util import get_response_text_with_url, get_raw_data_file_path, save_raw_data_in_tsv_file
+from util import get_response_text_with_url, get_file_path, save_raw_data_in_tsv_file
 
 
 def crawl_fangtianxia_parcel_raw_data(city_name):
@@ -25,7 +25,7 @@ def crawl_fangtianxia_parcel_raw_data(city_name):
 def crawl_parcel_raw_data_with_parcel_url_list(url_list, city_name):
     for parcel_url in url_list:
         parcel_raw_data = get_parcel_raw_data_with_parcel_url(parcel_url)
-        file_path = get_raw_data_file_path(city_name, FANGTIANXIA_SOURCE_NAME, PARCEL_LABEL)
+        file_path = get_file_path(city_name, FANGTIANXIA_SOURCE_NAME, PARCEL_LABEL)
         save_raw_data_in_tsv_file(file_path, parcel_raw_data)
 
 

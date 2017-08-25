@@ -1,27 +1,29 @@
-import os
 import threading
-
 import requests
 from retrying import retry
 
 from constant import THREAD_NUM, STEP_NUM, UNIT_DISTANCE, city_center_url_pattern, BAIDU_API_AK, TIMEOUT, HEADERS
 from crawler.crawler_enum import CrawlerEnum
-from util import get_date, isWindowsSystem
 
 
 class CrawlerSourceName(CrawlerEnum):
-    ANJUKE = '安居客'
-    LIANJIA = '链家'
-    BAIDU = '百度'
-    FANGTIANXIA = '房天下'
+    ANJUKE = 'anjuke'
+    LIANJIA = 'lianjia'
+    BAIDU = 'baidu'
+    FANGTIANXIA = 'fangtianxia'
 
 
 class CrawlerDataType(CrawlerEnum):
-    SECOND_HAND_COMMUNITY = '小区_二手'
-    NEW_COMMUNITY = '小区_一手'
+    RAW_DATA = 'raw_data'
+    READY_DATA = 'ready_data'
+
+
+class CrawlerDataLabel(CrawlerEnum):
+    SECOND_HAND_COMMUNITY = 'second_hand_community'
+    NEW_COMMUNITY = 'new_community'
     BAIDU_POI = 'poi'
-    PARCEL = '地块'
-    SINGLE_SECOND_HAND_APARTMENT = '单套_二手'
+    PARCEL = 'parcel'
+    SINGLE_SECOND_HAND_APARTMENT = 'second_hand_apartment'
 
 class Crawler(object):
 
@@ -95,16 +97,3 @@ class Crawler(object):
                                   '%.6f' % (lng + dist_lng + self.unit_distance),
                                   '%.6f' % (lat + dist_lat + self.unit_distance)])
         return rect_list
-
-'''
-    def get_raw_data_file_path(self, city_name, source_name, data_type_label):
-        date = get_date()
-        path = os.path.join(os.path.dirname(os.getcwd()), 'raw_data', city_name, str(date))
-        if not os.path.exists(path):
-            os.makedirs(path)
-        file_path = path + '\{}_{}_{}_{}.txt'.format(city_name, source_name, data_type_label, date)
-        if not isWindowsSystem():
-            Linux_file_path = file_path.replace('\\', '/')
-            return Linux_file_path
-        return file_path
-'''
