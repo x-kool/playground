@@ -1,11 +1,9 @@
-import os
 import re
-
 import time
-from pypinyin import lazy_pinyin
 import pandas as pd
-from crawler.base_crawler import CrawlerSourceName, CrawlerDataLabel, CrawlerDataType
-from util import get_date, isWindowsSystem, get_file_path
+
+from crawler.crawler_enum import CrawlerSourceName, CrawlerDataLabel, CrawlerDataType
+from util import get_file_path
 
 
 def process_anjuke_new_community_raw_data(city_name):
@@ -44,18 +42,6 @@ def transfer_house_type(raw_data):
         house_types.loc[idx] = str(residence_info_ready)
         print(idx, str(residence_info_ready))
 
-
-def get_ready_data_file_path(city_name, data_type, source_name, data_label):
-    date = get_date()
-    city_name_pinyin = ''.join(lazy_pinyin(city_name))
-    path = os.path.join(os.path.dirname(os.getcwd()), data_type, city_name_pinyin, str(date))
-    if not os.path.exists(path):
-        os.makedirs(path)
-    file_path = path + '\{}_{}_{}_{}.tsv'.format(city_name_pinyin, source_name, data_label, date)
-    if not isWindowsSystem():
-        Linux_file_path = file_path.replace('\\', '/')
-        return Linux_file_path
-    return file_path
 
 #'''
 if __name__ == '__main__':

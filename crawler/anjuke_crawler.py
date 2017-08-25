@@ -3,11 +3,13 @@ import time
 from pypinyin import lazy_pinyin
 
 from constant import anjuke_2nd_community_url_pattern, anjuke_new_community_url_pattern
-from crawler.base_crawler import Crawler, CrawlerSourceName, CrawlerDataLabel, CrawlerDataType
+from crawler.base_crawler import BaseCrawler
+from crawler.crawler_enum import CrawlerSourceName, CrawlerDataLabel, CrawlerDataType
+
 from util import save_raw_data_in_tsv_file, get_file_path
 
 
-class AnjukeCrawler(Crawler):
+class AnjukeBaseCrawler(BaseCrawler):
     data_dict_list_for_new_community = []
     data_dict_list_for_second_hand_community = []
 
@@ -78,9 +80,10 @@ class AnjukeCrawler(Crawler):
 #'''
 if __name__ == '__main__':
     start = time.clock()
-    crawler = AnjukeCrawler('重庆')
+    crawler = AnjukeBaseCrawler('重庆')
     # crawler.crawl_anjuke_new_community_raw_data()
-    crawler.crawl_anjuke_second_hand_community_raw_data()
+    # crawler.crawl_anjuke_second_hand_community_raw_data()
+    crawler.crawl_anjuke_raw_data()
     end = time.clock()
     print('运行时间：%-.2f s' % (end - start))
 #'''
