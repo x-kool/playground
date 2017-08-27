@@ -1,4 +1,5 @@
 import threading
+from multiprocessing.pool import ThreadPool
 import requests
 from retrying import retry
 
@@ -71,3 +72,24 @@ class BaseCrawler(object):
                                   '%.6f' % (lng + dist_lng + self.unit_distance),
                                   '%.6f' % (lat + dist_lat + self.unit_distance)])
         return rect_list
+
+    def new_get_rect_list_by_lng_lat(self, center_lng, center_lat):
+        rect_list = []
+        start_point_lng = center_lng - self.step_num * self.unit_distance / 2
+        start_point_lat = center_lat - self.step_num * self.unit_distance / 2
+        for idx_in_lng in range(self.step_num):
+            lower_left_lng = start_point_lng + idx_in_lng * self.unit_distance
+            for idx_in_lat in range(self.step_num):
+                lower_left_lat = start_point_lat + idx_in_lat * self.unit_distance
+                rect_list.append(['%.6f' % (lower_left_lng),
+                                  '%.6f' % (lower_left_lat),
+                                  '%.6f' % (lower_left_lng + self.unit_distance),
+                                  '%.6f' % (lower_left_lat + self.unit_distance)])
+        return rect_list
+
+    def thread_for_crawler(self, thread_num, func_in_thread, input_list, func_to_callback):
+        pool = ThreadPool(processes=thread_num)
+        for i in range( len(input_list) ):
+            async_result = pool.apply_async(func_in_thread, (input_list[i],), callback=func_to_callback)
+        pool.close()
+        pool.join()

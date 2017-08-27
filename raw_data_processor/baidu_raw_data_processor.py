@@ -5,7 +5,7 @@ import json
 from crawler.crawler_enum import CrawlerSourceName, CrawlerDataLabel, CrawlerDataType
 from util import get_file_path
 
-
+# TODO (Ke)通过 pandas DataFrame进行读取，由于有空白数据，存在无法对对齐的问题
 def process_baidu_poi_raw_data(city_name):
     read_file_path = get_file_path(city_name,
                                    CrawlerDataType.RAW_DATA.value,
@@ -15,7 +15,8 @@ def process_baidu_poi_raw_data(city_name):
                                    CrawlerDataType.READY_DATA.value,
                                    CrawlerSourceName.BAIDU.value,
                                    CrawlerDataLabel.BAIDU_POI.value)
-    raw_data = pd.read_table(read_file_path, encoding='gbk')
+    # TODO (Ke) 有部分数据通过pandas自带的'read_table'解码有问题，暂时通过 'error_bad_lines' 忽略，会丢失数据
+    raw_data = pd.read_table(read_file_path, error_bad_lines=False)
     ready_data = process_raw_data_to_ready(raw_data)
     ready_data.to_csv(path_or_buf=save_file_path, sep='\t', encoding='utf-8')
 
@@ -57,36 +58,48 @@ def add_lng_column_from_location(raw_data):
 def transfer_lat_from_location(location):
     if type(location) == str:
         location_to_json_loads = location.replace("'", '"')
-        location_dict = json.loads(location_to_json_loads)
-        if 'lat' in location_dict.keys():
-            return location_dict['lat']
+        try:
+            location_dict = json.loads(location_to_json_loads)
+            if 'lat' in location_dict.keys():
+                return location_dict['lat']
+        except:
+            pass
     return ''
 
 
 def transfer_lng_from_location(location):
     if type(location) == str:
         location_to_json_loads = location.replace("'", '"')
-        location_dict = json.loads(location_to_json_loads)
-        if 'lng' in location_dict.keys():
-            return location_dict['lng']
+        try:
+            location_dict = json.loads(location_to_json_loads)
+            if 'lng' in location_dict.keys():
+                return location_dict['lng']
+        except:
+            pass
     return ''
 
 
 def transfer_detail_info_to_category(detail):
     if type(detail) == str:
         detail_to_json_loads = detail.replace("'", '"')
-        detail_dict = json.loads(detail_to_json_loads)
-        if 'tag' in detail_dict.keys():
-            return detail_dict['tag']
+        try:
+            detail_dict = json.loads(detail_to_json_loads)
+            if 'tag' in detail_dict.keys():
+                return detail_dict['tag']
+        except:
+            pass
     return ''
 
 
 def transfer_detail_info_to_type(detail):
     if type(detail) == str:
         detail_to_json_loads = detail.replace("'", '"')
-        detail_dict = json.loads(detail_to_json_loads)
-        if 'type' in detail_dict.keys():
-            return detail_dict['type']
+        try:
+            detail_dict = json.loads(detail_to_json_loads)
+            if 'type' in detail_dict.keys():
+                return detail_dict['type']
+        except:
+            pass
     return ''
 
 #'''

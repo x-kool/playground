@@ -1,8 +1,8 @@
 # crawler config for thread with rect list
 TIMEOUT = 5
-STEP_NUM = 10
+STEP_NUM = 100
 UNIT_DISTANCE = 0.01
-THREAD_NUM = 4
+THREAD_NUM = 30
 
 # headers
 HEADERS = {'User-Agent': "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36"}

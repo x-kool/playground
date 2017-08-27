@@ -1,43 +1,24 @@
+import os
 import re
-import threading
+import tablib
 import time
 from bs4 import BeautifulSoup
 
-from constant import THREAD_NUM, FANGTIANXIA_CITY_NUM_TRANSFER, fangtianxia_page_url_pattern, \
-    fangtianxia_parcel_url_pattern
+from constant import fangtianxia_page_url_pattern, FANGTIANXIA_CITY_NUM_TRANSFER, fangtianxia_parcel_url_pattern, \
+    THREAD_NUM
 from crawler.base_crawler import BaseCrawler
 from crawler.crawler_enum import CrawlerDataType, CrawlerSourceName, CrawlerDataLabel
-from util import get_file_path, save_raw_data_in_tsv_file
+from util import get_file_path
 
 
 class FangtianxiaCrawler(BaseCrawler):
-    parcel_raw_data_list = []
 
     def crawl_fangtianxia_parcel_raw_data(self):
         url_list = self.get_parcel_url_list()
-        len_of_sub_url_list_for_thread = int(len(url_list) / THREAD_NUM)
-        thread_list = []
-        for i in range(THREAD_NUM):
-            thread = threading.Thread(target=self.crawl_parcel_raw_data_with_parcel_url_list,
-                                      args=(url_list[i * len_of_sub_url_list_for_thread: (i+1)* len_of_sub_url_list_for_thread],))
-            thread.start()
-            thread_list.append(thread)
-        for thread in thread_list:
-            thread.join()
-
-        file_path = get_file_path(self.city_name,
-                                  CrawlerDataType.RAW_DATA.value,
-                                  CrawlerSourceName.FANGTIANXIA.value,
-                                  CrawlerDataLabel.PARCEL.value)
-        save_raw_data_in_tsv_file(file_path, self.parcel_raw_data_list)
-
-    def crawl_parcel_raw_data_with_parcel_url_list(self, url_list):
-        lens = len(url_list)
-        for idx,parcel_url in enumerate(url_list):
-            parcel_raw_data = self.get_parcel_raw_data_with_parcel_url(parcel_url)
-            self.parcel_raw_data_list.append(parcel_raw_data)
-            print(str(idx) + '/' + str(lens))
-
+        self.thread_for_crawler(THREAD_NUM,
+                                self.get_parcel_raw_data_with_parcel_url,
+                                url_list,
+                                self.write_parcel_raw_data_in_rect_to_file)
 
     def get_parcel_raw_data_with_parcel_url(self, parcel_url):
         text = self.get_response_text_with_url(parcel_url)
@@ -62,7 +43,7 @@ class FangtianxiaCrawler(BaseCrawler):
             pattern = re.compile('地块编号：(.*?)</span>')
             num_of_parcel = re.findall(pattern, text)[0]
             parcel_data['地块编号'] = num_of_parcel
-            return parcel_data
+            return [parcel_data]
 
     def get_parcel_url_list(self):
         page_size = self.get_page_size(self.city_name)
@@ -84,12 +65,30 @@ class FangtianxiaCrawler(BaseCrawler):
         page_size = re.findall(pattern, text)[0]
         return int(page_size)
 
+    def write_parcel_raw_data_in_rect_to_file(self, raw_data_list):
+        write_file_path = get_file_path(self.city_name,
+                                        CrawlerDataType.RAW_DATA.value,
+                                        CrawlerSourceName.FANGTIANXIA.value,
+                                        CrawlerDataLabel.PARCEL.value)
+        for raw_data in raw_data_list:
+            res_value = list(raw_data.values())
+            data_value = tablib.Dataset(res_value)
+
+            res_key = list(raw_data.keys())
+            data_key = tablib.Dataset(res_key)
+
+            if not os.path.exists(write_file_path):
+                with open(write_file_path, 'a+', encoding='utf-8') as f:
+                    f.write(str(data_key.tsv))
+                    f.write(str(data_value.tsv))
+            else:
+                with open(write_file_path, 'a+', encoding='utf-8') as f:
+                    f.write(str(data_value.tsv))
+
 #'''
 if __name__ == '__main__':
     start = time.clock()
     crawler = FangtianxiaCrawler('重庆')
-    # crawler.crawl_anjuke_new_community_raw_data()
-    # crawler.crawl_anjuke_second_hand_community_raw_data()
     crawler.crawl_fangtianxia_parcel_raw_data()
     end = time.clock()
     print('运行时间：%-.2f s' % (end - start))
