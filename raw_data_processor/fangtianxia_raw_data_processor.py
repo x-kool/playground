@@ -1,6 +1,7 @@
 import time
 import pandas as pd
 
+from constant import FANGTIANXIA_READY_HEADER_LIST
 from crawler.crawler_enum import CrawlerSourceName, CrawlerDataLabel, CrawlerDataType
 from util import get_file_path
 
@@ -18,27 +19,7 @@ def process_fangtianxia_parcel_raw_data(city_name):
     ready_data.to_csv(path_or_buf=save_file_path, sep='\t', encoding='utf-8')
 
 def process_raw_data_to_ready(raw_data):
-    ready_data = raw_data[['地区',
-                           '总面积',
-                           '建设用地面积',
-                           '规划建筑面积',
-                           '容积率',
-                           '绿化率',
-                           '商业比例',
-                           '建筑密度',
-                           '限制高度',
-                           '出让形式',
-                           '出让年限',
-                           '位置',
-                           '规划用途',
-                           '起始日期',
-                           '起始价',
-                           '成交价',
-                           '楼面地价',
-                           '溢价率',
-                           'lng',
-                           'lat',
-                           '地块编号']]
+    ready_data = raw_data[FANGTIANXIA_READY_HEADER_LIST]
     return ready_data
 
     # '''

@@ -1,17 +1,20 @@
 import json
-import os
 import re
-import tablib
 import time
 
 from constant import lianjia_new_community_url_pattern, cq_url_for_lianjia_city_list, \
-    lianjia_second_hand_community_url_pattern, THREAD_NUM
+    lianjia_second_hand_community_url_pattern, THREAD_NUM, LIANJIA_SECOND_COMMUNITY_RAW_DATA_HEADER_LIST
 from crawler.base_crawler import BaseCrawler
 from crawler.crawler_enum import CrawlerDataType, CrawlerSourceName, CrawlerDataLabel
 from util import get_file_path, save_raw_data_in_tsv_file
 
 
 class LianjiaCrawler(BaseCrawler):
+    def __init__(self, city_name):
+        super(LianjiaCrawler, self).__init__(city_name)
+        self.lng, self.lat = self.get_city_center_lng_lat_by_city_name(self.city_name)
+        self.rect_list = self.new_get_rect_list_by_lng_lat(self.lng, self.lat)
+
     def crawl_lianjia_raw_data(self):
         self.crawl_lianjia_second_hand_community_raw_data()
         self.crawl_lianjia_new_community_raw_data()
@@ -31,12 +34,10 @@ class LianjiaCrawler(BaseCrawler):
         save_raw_data_in_tsv_file(file_path, data_dict_list_for_new_community)
 
     def crawl_lianjia_second_hand_community_raw_data(self):
-        lng, lat = self.get_city_center_lng_lat_by_city_name(self.city_name)
-        rect_list = self.new_get_rect_list_by_lng_lat(lng, lat)
-        self.thread_for_crawler(THREAD_NUM,
-                                self.crawl_second_community_raw_data_with_rect,
-                                rect_list,
-                                self.write_second_community_raw_data_in_rect_to_file)
+        self.crawl_with_thread_pool(THREAD_NUM,
+                                    self.crawl_second_community_raw_data_with_rect,
+                                    self.rect_list,
+                                    self.write_second_community_raw_data_in_rect_to_file)
 
     def crawl_second_community_raw_data_with_rect(self, rect):
         res = []
@@ -59,20 +60,7 @@ class LianjiaCrawler(BaseCrawler):
                                         CrawlerDataType.RAW_DATA.value,
                                         CrawlerSourceName.LIANJIA.value,
                                         CrawlerDataLabel.SECOND_HAND_COMMUNITY.value)
-        for raw_data in raw_data_list:
-            res_value = list(raw_data.values())
-            data_value = tablib.Dataset(res_value)
-
-            res_key = list(raw_data.keys())
-            data_key = tablib.Dataset(res_key)
-
-            if not os.path.exists(write_file_path):
-                with open(write_file_path, 'a+', encoding='utf-8') as f:
-                    f.write(str(data_key.tsv))
-                    f.write(str(data_value.tsv))
-            else:
-                with open(write_file_path, 'a+', encoding='utf-8') as f:
-                    f.write(str(data_value.tsv))
+        self.write_to_file(LIANJIA_SECOND_COMMUNITY_RAW_DATA_HEADER_LIST, write_file_path, raw_data_list)
 
     def get_lianjia_new_community_data_with_url(self, url):
         text = self.get_response_text_with_url(url)
@@ -101,9 +89,9 @@ class LianjiaCrawler(BaseCrawler):
 if __name__ == '__main__':
     start = time.clock()
     crawler = LianjiaCrawler('重庆')
-    crawler.crawl_lianjia_second_hand_community_raw_data()
+    # crawler.crawl_lianjia_second_hand_community_raw_data()
     # crawler.crawl_lianjia_new_community_raw_data()
-    # crawler.crawl_lianjia_raw_data()
+    crawler.crawl_lianjia_raw_data()
     end = time.clock()
     print('运行时间：%-.2f s' % (end - start))
     # '''

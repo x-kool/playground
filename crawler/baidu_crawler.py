@@ -1,22 +1,24 @@
-import os
 import requests
 import time
-import tablib
 
-from constant import BAIDU_POI_CATEGORIES, TIMEOUT, baidu_poi_url_pattern, BAIDU_API_AK, THREAD_NUM
+from constant import BAIDU_POI_CATEGORIES, TIMEOUT, baidu_poi_url_pattern, BAIDU_API_AK, THREAD_NUM, \
+    BAIDU_POI_RAW_DATA_HEADER_LIST
 from crawler.base_crawler import BaseCrawler
 from crawler.crawler_enum import CrawlerDataType, CrawlerSourceName, CrawlerDataLabel
 from util import get_file_path
 
 class BaiduCrawler(BaseCrawler):
-    stored_poi_uid_list = []
+    def __init__(self, city_name):
+        super(BaiduCrawler, self).__init__(city_name)
+        self.stored_poi_uid_list = []
+        self.lng, self.lat = self.get_city_center_lng_lat_by_city_name(self.city_name)
+        self.rect_list = self.new_get_rect_list_by_lng_lat(self.lng, self.lat)
+
     def crawl_baidu_raw_data(self):
-        lng, lat = self.get_city_center_lng_lat_by_city_name(self.city_name)
-        rect_list = self.new_get_rect_list_by_lng_lat(lng, lat)
-        self.thread_for_crawler(THREAD_NUM,
-                                self.crawl_poi_raw_data_with_rect,
-                                rect_list,
-                                self.write_poi_raw_data_in_rect_to_file)
+        self.crawl_with_thread_pool(THREAD_NUM,
+                                    self.crawl_poi_raw_data_with_rect,
+                                    self.rect_list,
+                                    self.write_poi_raw_data_in_rect_to_file)
 
     def crawl_poi_raw_data_with_rect(self, rect):
         data_dict_list_for_poi = []
@@ -51,27 +53,13 @@ class BaiduCrawler(BaseCrawler):
                                         CrawlerDataType.RAW_DATA.value,
                                         CrawlerSourceName.BAIDU.value,
                                         CrawlerDataLabel.BAIDU_POI.value)
-        for raw_data in raw_data_list:
-            res_value = list(raw_data.values())
-            data_value = tablib.Dataset(res_value)
-
-            res_key = list(raw_data.keys())
-            data_key = tablib.Dataset(res_key)
-
-            if not os.path.exists(write_file_path):
-                with open(write_file_path, 'a+', encoding='utf-8') as f:
-                    f.write(str(data_key.tsv))
-                    f.write(str(data_value.tsv))
-            else:
-                with open(write_file_path, 'a+', encoding='utf-8') as f:
-                    f.write(str(data_value.tsv))
+        self.write_to_file(BAIDU_POI_RAW_DATA_HEADER_LIST, write_file_path, raw_data_list)
 
 #'''
 if __name__ == '__main__':
     start = time.clock()
     crawler = BaiduCrawler('重庆')
     crawler.crawl_baidu_raw_data()
-
     end = time.clock()
     print('运行时间：%-.2f s' % (end - start))
     print('poi信息数量：%s' % (len(crawler.stored_poi_uid_list)))

@@ -1,29 +1,29 @@
-import os
 import re
-import tablib
 import time
 from bs4 import BeautifulSoup
 
 from constant import fangtianxia_page_url_pattern, FANGTIANXIA_CITY_NUM_TRANSFER, fangtianxia_parcel_url_pattern, \
-    THREAD_NUM
+    THREAD_NUM, FANGTIANXIA_PARCEL_RAW_DATA_HEADER_LIST
 from crawler.base_crawler import BaseCrawler
 from crawler.crawler_enum import CrawlerDataType, CrawlerSourceName, CrawlerDataLabel
 from util import get_file_path
 
 
 class FangtianxiaCrawler(BaseCrawler):
+    def __init__(self, city_name):
+        super(FangtianxiaCrawler, self).__init__(city_name)
+        self.url_list = self.get_parcel_url_list()
 
     def crawl_fangtianxia_parcel_raw_data(self):
-        url_list = self.get_parcel_url_list()
-        self.thread_for_crawler(THREAD_NUM,
-                                self.get_parcel_raw_data_with_parcel_url,
-                                url_list,
-                                self.write_parcel_raw_data_in_rect_to_file)
+        self.crawl_with_thread_pool(THREAD_NUM,
+                                    self.get_parcel_raw_data_with_parcel_url,
+                                    self.url_list,
+                                    self.write_parcel_raw_data_in_rect_to_file)
 
     def get_parcel_raw_data_with_parcel_url(self, parcel_url):
         text = self.get_response_text_with_url(parcel_url)
         if text:
-            soup = BeautifulSoup(text)
+            soup = BeautifulSoup(text, 'lxml')
             parcel_data = {}
             # 基础信息&交易信息
             for data_part_index in range(2):
@@ -70,20 +70,7 @@ class FangtianxiaCrawler(BaseCrawler):
                                         CrawlerDataType.RAW_DATA.value,
                                         CrawlerSourceName.FANGTIANXIA.value,
                                         CrawlerDataLabel.PARCEL.value)
-        for raw_data in raw_data_list:
-            res_value = list(raw_data.values())
-            data_value = tablib.Dataset(res_value)
-
-            res_key = list(raw_data.keys())
-            data_key = tablib.Dataset(res_key)
-
-            if not os.path.exists(write_file_path):
-                with open(write_file_path, 'a+', encoding='utf-8') as f:
-                    f.write(str(data_key.tsv))
-                    f.write(str(data_value.tsv))
-            else:
-                with open(write_file_path, 'a+', encoding='utf-8') as f:
-                    f.write(str(data_value.tsv))
+        self.write_to_file(FANGTIANXIA_PARCEL_RAW_DATA_HEADER_LIST, write_file_path, raw_data_list)
 
 #'''
 if __name__ == '__main__':

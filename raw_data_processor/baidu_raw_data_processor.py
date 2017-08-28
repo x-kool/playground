@@ -2,10 +2,10 @@ import time
 import pandas as pd
 import json
 
+from constant import BAIDU_POI_READY_DATA_HEADER_LIST
 from crawler.crawler_enum import CrawlerSourceName, CrawlerDataLabel, CrawlerDataType
 from util import get_file_path
 
-# TODO (Ke)通过 pandas DataFrame进行读取，由于有空白数据，存在无法对对齐的问题
 def process_baidu_poi_raw_data(city_name):
     read_file_path = get_file_path(city_name,
                                    CrawlerDataType.RAW_DATA.value,
@@ -15,7 +15,6 @@ def process_baidu_poi_raw_data(city_name):
                                    CrawlerDataType.READY_DATA.value,
                                    CrawlerSourceName.BAIDU.value,
                                    CrawlerDataLabel.BAIDU_POI.value)
-    # TODO (Ke) 有部分数据通过pandas自带的'read_table'解码有问题，暂时通过 'error_bad_lines' 忽略，会丢失数据
     raw_data = pd.read_table(read_file_path, error_bad_lines=False)
     ready_data = process_raw_data_to_ready(raw_data)
     ready_data.to_csv(path_or_buf=save_file_path, sep='\t', encoding='utf-8')
@@ -26,12 +25,7 @@ def process_raw_data_to_ready(raw_data):
     add_type_column_from_detail_info(raw_data)
     add_lat_column_from_location(raw_data)
     add_lng_column_from_location(raw_data)
-    ready_data = raw_data[['name',
-                           'uid',
-                           'lat',
-                           'lng',
-                           'category',
-                           'type']]
+    ready_data = raw_data[BAIDU_POI_READY_DATA_HEADER_LIST]
     return ready_data
 
 

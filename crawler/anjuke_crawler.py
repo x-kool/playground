@@ -1,35 +1,35 @@
 import json
-import os
-import tablib
 import time
 from pypinyin import lazy_pinyin
 
-from constant import anjuke_new_community_url_pattern, anjuke_2nd_community_url_pattern, THREAD_NUM
+from constant import anjuke_new_community_url_pattern, anjuke_2nd_community_url_pattern, THREAD_NUM, \
+    ANJUKE_NEW_COMMUNITY_RAW_DATA_HEADER_LIST, ANJUKE_SECOND_COMMUNITY_RAW_DATA_HEADER_LIST
 from crawler.base_crawler import BaseCrawler
 from crawler.crawler_enum import CrawlerDataType, CrawlerSourceName, CrawlerDataLabel
 from util import get_file_path
 
 
 class AnjukeCrawler(BaseCrawler):
+    def __init__(self, city_name):
+        super(AnjukeCrawler, self).__init__(city_name)
+        self.lng, self.lat = self.get_city_center_lng_lat_by_city_name(self.city_name)
+        self.rect_list = self.new_get_rect_list_by_lng_lat(self.lng, self.lat)
+
     def crawl_anjuke_raw_data(self):
         self.crawl_anjuke_second_hand_community_raw_data()
         self.crawl_anjuke_new_community_raw_data()
 
     def crawl_anjuke_new_community_raw_data(self):
-        lng, lat = self.get_city_center_lng_lat_by_city_name(self.city_name)
-        rect_list = self.new_get_rect_list_by_lng_lat(lng, lat)
-        self.thread_for_crawler(THREAD_NUM,
-                                self.crawl_new_community_raw_data_with_rect,
-                                rect_list,
-                                self.write_new_community_raw_data_in_rect_to_file)
+        self.crawl_with_thread_pool(THREAD_NUM,
+                                    self.crawl_new_community_raw_data_with_rect,
+                                    self.rect_list,
+                                    self.write_new_community_raw_data_in_rect_to_file)
 
     def crawl_anjuke_second_hand_community_raw_data(self):
-        lng, lat = self.get_city_center_lng_lat_by_city_name(self.city_name)
-        rect_list = self.new_get_rect_list_by_lng_lat(lng, lat)
-        self.thread_for_crawler(THREAD_NUM,
-                                self.crawl_second_community_raw_data_with_rect,
-                                rect_list,
-                                self.write_second_community_raw_data_in_rect_to_file)
+        self.crawl_with_thread_pool(THREAD_NUM,
+                                    self.crawl_second_community_raw_data_with_rect,
+                                    self.rect_list,
+                                    self.write_second_community_raw_data_in_rect_to_file)
 
     def crawl_new_community_raw_data_with_rect(self, rect):
         res = []
@@ -75,42 +75,14 @@ class AnjukeCrawler(BaseCrawler):
                                         CrawlerDataType.RAW_DATA.value,
                                         CrawlerSourceName.ANJUKE.value,
                                         CrawlerDataLabel.NEW_COMMUNITY.value)
-        for raw_data in raw_data_list:
-            res_value = list(raw_data.values())
-            data_value = tablib.Dataset(res_value)
+        self.write_to_file(ANJUKE_NEW_COMMUNITY_RAW_DATA_HEADER_LIST, write_file_path, raw_data_list)
 
-            res_key = list(raw_data.keys())
-            data_key = tablib.Dataset(res_key)
-
-            if not os.path.exists(write_file_path):
-                with open(write_file_path, 'a+', encoding='utf-8') as f:
-                    f.write(str(data_key.tsv))
-                    f.write(str(data_value.tsv))
-            else:
-                with open(write_file_path, 'a+', encoding='utf-8') as f:
-                    f.write(str(data_value.tsv))
-
-    # 线程池通过回调函数(callback)同步线程写入同一文件的问题
     def write_second_community_raw_data_in_rect_to_file(self, raw_data_list):
         write_file_path = get_file_path(self.city_name,
                                         CrawlerDataType.RAW_DATA.value,
                                         CrawlerSourceName.ANJUKE.value,
                                         CrawlerDataLabel.SECOND_HAND_COMMUNITY.value)
-        for raw_data in raw_data_list:
-            res_value = list(raw_data.values())
-            data_value = tablib.Dataset(res_value)
-
-            res_key = list(raw_data.keys())
-            data_key = tablib.Dataset(res_key)
-
-            if not os.path.exists(write_file_path):
-                with open(write_file_path, 'a+', encoding='utf-8') as f:
-                    f.write(str(data_key.tsv))
-                    f.write(str(data_value.tsv))
-            else:
-                with open(write_file_path, 'a+', encoding='utf-8') as f:
-                    f.write(str(data_value.tsv))
-
+        self.write_to_file(ANJUKE_SECOND_COMMUNITY_RAW_DATA_HEADER_LIST, write_file_path, raw_data_list)
 
 #'''
 if __name__ == '__main__':

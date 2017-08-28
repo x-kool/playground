@@ -2,6 +2,7 @@ import re
 import time
 import pandas as pd
 
+from constant import ANJUKE_NEW_COMMUNITY_READY_DATA_HEADER_LIST, ANJUKE_SECOND_COMMUNITY_READY_DATA_HEADER_LIST
 from crawler.crawler_enum import CrawlerSourceName, CrawlerDataLabel, CrawlerDataType
 from util import get_file_path
 
@@ -16,7 +17,7 @@ def process_anjuke_new_community_raw_data(city_name):
                                    CrawlerSourceName.ANJUKE.value,
                                    CrawlerDataLabel.NEW_COMMUNITY.value)
     raw_data = pd.read_table(read_file_path, error_bad_lines=False)
-    ready_data = process_raw_data_to_ready(raw_data)
+    ready_data = process_new_community_raw_data_to_ready(raw_data)
     ready_data.to_csv(path_or_buf=save_file_path, sep='\t', encoding='utf-8')
 
 def process_anjuke_second_hand_community_raw_data(city_name):
@@ -29,28 +30,17 @@ def process_anjuke_second_hand_community_raw_data(city_name):
                                    CrawlerSourceName.ANJUKE.value,
                                    CrawlerDataLabel.SECOND_HAND_COMMUNITY.value)
     raw_data = pd.read_table(read_file_path, error_bad_lines=False)
-    ready_data = raw_data
+    ready_data = process_second_community_raw_data_to_ready(raw_data)
     ready_data.to_csv(path_or_buf=save_file_path, sep='\t', encoding='utf-8')
 
-def process_raw_data_to_ready(raw_data):
-    transfer_house_type(raw_data)
-    ready_data = raw_data[['address',
-                           'baidu_lat',
-                           'baidu_lng',
-                           'build_type',
-                           'developer',
-                           'fitment_type',
-                           'house_types',
-                           'kaipan_new_date',
-                           'loupan_id',
-                           'loupan_name',
-                           'metro_info',
-                           'new_price',
-                           'prop_num',
-                           'region_title',
-                           'sub_region_title']]
+def process_second_community_raw_data_to_ready(raw_data):
+    ready_data = raw_data[ANJUKE_SECOND_COMMUNITY_READY_DATA_HEADER_LIST]
     return ready_data
 
+def process_new_community_raw_data_to_ready(raw_data):
+    transfer_house_type(raw_data)
+    ready_data = raw_data[ANJUKE_NEW_COMMUNITY_READY_DATA_HEADER_LIST]
+    return ready_data
 
 def transfer_house_type(raw_data):
     house_types = raw_data['house_types']
@@ -60,11 +50,10 @@ def transfer_house_type(raw_data):
         house_types.loc[idx] = str(residence_info_ready)
         print(idx, str(residence_info_ready))
 
-
 #'''
 if __name__ == '__main__':
     start = time.clock()
-    # process_anjuke_new_community_raw_data('重庆')
+    process_anjuke_new_community_raw_data('重庆')
     process_anjuke_second_hand_community_raw_data('重庆')
     end = time.clock()
     print('运行时间：%-.2f s' % (end - start))
