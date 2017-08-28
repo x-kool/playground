@@ -23,7 +23,7 @@ class FangtianxiaCrawler(BaseCrawler):
     def get_parcel_raw_data_with_parcel_url(self, parcel_url):
         text = self.get_response_text_with_url(parcel_url)
         if text:
-            soup = BeautifulSoup(text, 'lxml')
+            soup = BeautifulSoup(text, "lxml")
             parcel_data = {}
             # 基础信息&交易信息
             for data_part_index in range(2):
@@ -51,7 +51,7 @@ class FangtianxiaCrawler(BaseCrawler):
         for page_num in range(1, page_size + 1):
             url = fangtianxia_page_url_pattern.format(FANGTIANXIA_CITY_NUM_TRANSFER[self.city_name], page_num)
             text = self.get_response_text_with_url(url)
-            soup = BeautifulSoup(text)
+            soup = BeautifulSoup(text, "lxml")
             for i in soup.select('h3'):
                 parcel_url = fangtianxia_parcel_url_pattern + i.contents[1]['href']
                 parcel_url_list.append(parcel_url)

@@ -6,6 +6,7 @@ from constant import anjuke_new_community_url_pattern, anjuke_2nd_community_url_
     ANJUKE_NEW_COMMUNITY_RAW_DATA_HEADER_LIST, ANJUKE_SECOND_COMMUNITY_RAW_DATA_HEADER_LIST
 from crawler.base_crawler import BaseCrawler
 from crawler.crawler_enum import CrawlerDataType, CrawlerSourceName, CrawlerDataLabel
+from logger import FinalLogger
 from util import get_file_path
 
 
@@ -14,6 +15,7 @@ class AnjukeCrawler(BaseCrawler):
         super(AnjukeCrawler, self).__init__(city_name)
         self.lng, self.lat = self.get_city_center_lng_lat_by_city_name(self.city_name)
         self.rect_list = self.new_get_rect_list_by_lng_lat(self.lng, self.lat)
+        self.logger = FinalLogger.getLogger()
 
     def crawl_anjuke_raw_data(self):
         self.crawl_anjuke_second_hand_community_raw_data()
