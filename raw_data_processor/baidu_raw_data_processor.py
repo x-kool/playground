@@ -1,4 +1,5 @@
 import time
+from json import JSONDecodeError
 import pandas as pd
 import json
 
@@ -21,32 +22,32 @@ def process_baidu_poi_raw_data(city_name):
 
 
 def process_raw_data_to_ready(raw_data):
-    add_category_column_from_detail_info(raw_data)
-    add_type_column_from_detail_info(raw_data)
-    add_lat_column_from_location(raw_data)
-    add_lng_column_from_location(raw_data)
+    raw_data['category'] = get_category_column_from_detail_info(raw_data['detail_info'])
+    raw_data['type'] = get_type_column_from_detail_info(raw_data['detail_info'])
+    raw_data['lat'] = get_lat_column_from_location(raw_data['location'])
+    raw_data['lng'] = get_lng_column_from_location(raw_data['location'])
     ready_data = raw_data[BAIDU_POI_READY_DATA_HEADER_LIST]
     return ready_data
 
 
-def add_category_column_from_detail_info(raw_data):
-    new_column = list(map(transfer_detail_info_to_category, raw_data['detail_info']))
-    raw_data['category'] = new_column
+def get_category_column_from_detail_info(detail_info):
+    category = list(map(transfer_detail_info_to_category, detail_info))
+    return category
 
 
-def add_type_column_from_detail_info(raw_data):
-    new_column = list(map(transfer_detail_info_to_type, raw_data['detail_info']))
-    raw_data['type'] = new_column
+def get_type_column_from_detail_info(detail):
+    type_name = list(map(transfer_detail_info_to_type, detail))
+    return type_name
 
 
-def add_lat_column_from_location(raw_data):
-    new_column = list(map(transfer_lat_from_location, raw_data['location']))
-    raw_data['lat'] = new_column
+def get_lat_column_from_location(location):
+    lat = list(map(transfer_lat_from_location, location))
+    return lat
 
 
-def add_lng_column_from_location(raw_data):
-    new_column = list(map(transfer_lng_from_location, raw_data['location']))
-    raw_data['lng'] = new_column
+def get_lng_column_from_location(location):
+    lng = list(map(transfer_lng_from_location, location))
+    return lng
 
 
 def transfer_lat_from_location(location):
@@ -56,7 +57,7 @@ def transfer_lat_from_location(location):
             location_dict = json.loads(location_to_json_loads)
             if 'lat' in location_dict.keys():
                 return location_dict['lat']
-        except:
+        except JSONDecodeError:
             pass
     return ''
 
@@ -68,7 +69,7 @@ def transfer_lng_from_location(location):
             location_dict = json.loads(location_to_json_loads)
             if 'lng' in location_dict.keys():
                 return location_dict['lng']
-        except:
+        except JSONDecodeError:
             pass
     return ''
 
@@ -80,7 +81,7 @@ def transfer_detail_info_to_category(detail):
             detail_dict = json.loads(detail_to_json_loads)
             if 'tag' in detail_dict.keys():
                 return detail_dict['tag']
-        except:
+        except JSONDecodeError:
             pass
     return ''
 
@@ -92,7 +93,7 @@ def transfer_detail_info_to_type(detail):
             detail_dict = json.loads(detail_to_json_loads)
             if 'type' in detail_dict.keys():
                 return detail_dict['type']
-        except:
+        except JSONDecodeError:
             pass
     return ''
 

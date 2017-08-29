@@ -1,15 +1,18 @@
 # crawler config for thread with rect list
 TIMEOUT = 5
-STEP_NUM = 2
-UNIT_DISTANCE = 0.01
-THREAD_NUM = 20
+STEP_NUM = 10
+UNIT_DISTANCE = 0.005
+THREAD_NUM = 30
+
+# logger file path
+
 
 # headers
 HEADERS = {'User-Agent': "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36"}
 
 # baidu
-# BAIDU_API_AK = 'GEPiAH9zkDx5oy4K1Vj7Znw8zmbGhY0M' # by Shen
-BAIDU_API_AK = '0yMQoetZ3YOogQyAjr7CcUPBzCT82yBp'  # by xkool
+BAIDU_API_AK = 'GEPiAH9zkDx5oy4K1Vj7Znw8zmbGhY0M' # by Shen
+# BAIDU_API_AK = '0yMQoetZ3YOogQyAjr7CcUPBzCT82yBp'  # by xkool
 BAIDU_POI_CATEGORIES = ['美食$餐厅$超市$酒店$公园$酒吧$咖啡厅$小吃$茶座', '购物中心$便利店$园区$厂矿', '商铺$地铁$公交$轻轨$停车场$火车站$机场', '金融$住宅$美容$娱乐$健身',
                         '幼儿园$小学$中学$大学$教育$学校', '医疗$政府机构$公司$文化$数码$银行$写字楼$汽车']
 city_center_url_pattern = 'https://api.map.baidu.com/geocoder/v2/?address={}&output=json&ak={}'

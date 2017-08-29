@@ -1,4 +1,10 @@
 import logging.handlers
+import os
+import time
+from pypinyin import lazy_pinyin
+
+from crawler.crawler_enum import CrawlerDataType
+from util import is_windows_system
 
 
 class FinalLogger:
@@ -11,20 +17,23 @@ class FinalLogger:
               "c": logging.CRITICAL}
 
     log_level = "w"
-    log_file = "poi.log"
+    log_file_name = "crawler.log"
     log_max_byte = 10 * 1024 * 1024
     log_backup_count = 5
 
 
-    def __init__(self, log_file_name):
-        self.log_file =log_file_name
-
-
     @staticmethod
-    def getLogger():
+    def getLogger(city_name):
         if FinalLogger.logger is not None:
             return FinalLogger.logger
+
+        # base info
+        date = time.strftime("%Y_%m_%d", time.localtime())
+        city_name_pinyin = ''.join(lazy_pinyin(city_name))
+        path = os.path.join(os.path.dirname(os.getcwd()), CrawlerDataType.RAW_DATA.value, city_name_pinyin, str(date))
+        log_file_path = os.path.join(path, FinalLogger.log_file_name)
         # log conf
+        FinalLogger.log_file = log_file_path if is_windows_system() else log_file_path.replace('\\', '/')
         FinalLogger.logger = logging.Logger("poi_log")
         # backup nothing mush
         log_handler = logging.handlers.RotatingFileHandler(filename=FinalLogger.log_file,

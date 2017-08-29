@@ -1,5 +1,7 @@
 import requests
 import time
+from requests import RequestException
+from retrying import retry
 
 from constant import BAIDU_POI_CATEGORIES, TIMEOUT, baidu_poi_url_pattern, BAIDU_API_AK, THREAD_NUM, \
     BAIDU_POI_RAW_DATA_HEADER_LIST
@@ -23,11 +25,17 @@ class BaiduCrawler(BaseCrawler):
     def crawl_poi_raw_data_with_rect(self, rect):
         data_dict_list_for_poi = []
         for category in BAIDU_POI_CATEGORIES:
-            poi_list = self.get_baidu_poi_list(category, rect)
-            for poi in poi_list:
-                if poi['uid'] not in self.stored_poi_uid_list:
-                    self.stored_poi_uid_list.append(poi['uid'])
-                    data_dict_list_for_poi.append(poi)
+            try:
+                poi_list = self.get_baidu_poi_list(category, rect)
+                for poi in poi_list:
+                    if poi['uid'] not in self.stored_poi_uid_list:
+                        self.stored_poi_uid_list.append(poi['uid'])
+                        data_dict_list_for_poi.append(poi)
+            except RequestException as msg:
+                self.logger.warning('[city name:{0}][category:{1}][rect:{2}][exception:{3}]'.format(self.city_name,
+                                                                                                    category,
+                                                                                                    rect,
+                                                                                                    msg))
         return data_dict_list_for_poi
 
     def get_baidu_poi_list(self, category, rect):
@@ -39,6 +47,7 @@ class BaiduCrawler(BaseCrawler):
         except:
             raise ConnectionError
 
+    @retry(stop_max_attempt_number=10)
     def get_baidu_poi_url(self, category, rect):
         formed_rect = self.get_baidu_poi_rect_form(rect)
         poi_url = baidu_poi_url_pattern.format(category, formed_rect, BAIDU_API_AK)
@@ -62,5 +71,5 @@ if __name__ == '__main__':
     crawler.crawl_baidu_raw_data()
     end = time.clock()
     print('运行时间：%-.2f s' % (end - start))
-    print('poi信息数量：%s' % (len(crawler.stored_poi_uid_list)))
+    print('poi信息数量：%s' % (len(set(crawler.stored_poi_uid_list))))
 #'''

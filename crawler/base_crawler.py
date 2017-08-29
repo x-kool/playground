@@ -2,9 +2,11 @@ import os
 from multiprocessing.pool import ThreadPool
 import requests
 import tablib
+from requests import RequestException
 from retrying import retry
 
 from constant import THREAD_NUM, STEP_NUM, UNIT_DISTANCE, city_center_url_pattern, BAIDU_API_AK, TIMEOUT, HEADERS
+from logger import FinalLogger
 
 
 class BaseCrawler(object):
@@ -13,6 +15,7 @@ class BaseCrawler(object):
         self.thread_num = thread_num
         self.step_num = step_num
         self.unit_distance = unit_distance
+        self.logger = FinalLogger.getLogger(city_name)
 
     def get_city_center_lng_lat_by_city_name(self, city_name):
         city_url = city_center_url_pattern.format(city_name, BAIDU_API_AK)
@@ -21,7 +24,8 @@ class BaseCrawler(object):
             response_dict = response.json()
             location = response_dict['result']['location']
             return location['lng'], location['lat']
-        except:
+        except RequestException as msg:
+            self.logger.warning('[city name:{0}][exception:{1}]'.format(self.city_name, msg))
             raise ConnectionError
 
     @retry(stop_max_attempt_number=10)
@@ -53,19 +57,22 @@ class BaseCrawler(object):
         pool.join()
 
     def write_to_file(self, header, file_path, raw_data_list):
-        for raw_data in raw_data_list:
-            raw_data_value_list = []
-            for key_name in header:
-                if key_name not in raw_data.keys():
-                    raw_data[key_name] = 'nan'
-                raw_data_value_list.append(raw_data[key_name])
+        try:
+            for raw_data in raw_data_list:
+                raw_data_value_list = []
+                for key_name in header:
+                    if key_name not in raw_data.keys():
+                        raw_data[key_name] = 'nan'
+                    raw_data_value_list.append(raw_data[key_name])
 
-            data_value = tablib.Dataset(raw_data_value_list)
-            data_key = tablib.Dataset(header)
-            if not os.path.exists(file_path):
-                with open(file_path, 'a+', encoding='utf-8') as f:
-                    f.write(str(data_key.tsv))
-                    f.write(str(data_value.tsv))
-            else:
-                with open(file_path, 'a+', encoding='utf-8') as f:
-                    f.write(str(data_value.tsv))
+                data_value = tablib.Dataset(raw_data_value_list)
+                data_key = tablib.Dataset(header)
+                if not os.path.exists(file_path):
+                    with open(file_path, 'a+', encoding='utf-8') as f:
+                        f.write(str(data_key.tsv))
+                        f.write(str(data_value.tsv))
+                else:
+                    with open(file_path, 'a+', encoding='utf-8') as f:
+                        f.write(str(data_value.tsv))
+        except Exception as msg:
+            self.logger.warning('in [{0}] with [{1}]'.format(file_path, msg))

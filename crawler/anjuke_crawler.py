@@ -1,12 +1,12 @@
 import json
 import time
 from pypinyin import lazy_pinyin
+from requests import RequestException
 
 from constant import anjuke_new_community_url_pattern, anjuke_2nd_community_url_pattern, THREAD_NUM, \
     ANJUKE_NEW_COMMUNITY_RAW_DATA_HEADER_LIST, ANJUKE_SECOND_COMMUNITY_RAW_DATA_HEADER_LIST
 from crawler.base_crawler import BaseCrawler
 from crawler.crawler_enum import CrawlerDataType, CrawlerSourceName, CrawlerDataLabel
-from logger import FinalLogger
 from util import get_file_path
 
 
@@ -15,7 +15,6 @@ class AnjukeCrawler(BaseCrawler):
         super(AnjukeCrawler, self).__init__(city_name)
         self.lng, self.lat = self.get_city_center_lng_lat_by_city_name(self.city_name)
         self.rect_list = self.new_get_rect_list_by_lng_lat(self.lng, self.lat)
-        self.logger = FinalLogger.getLogger()
 
     def crawl_anjuke_raw_data(self):
         self.crawl_anjuke_second_hand_community_raw_data()
@@ -49,23 +48,29 @@ class AnjukeCrawler(BaseCrawler):
 
     def get_anjuke_new_community_list_with_rect(self, rect):
         rect_url = anjuke_new_community_url_pattern.format(*rect)
-        response_text = self.get_response_text_with_url(rect_url)
-        if response_text:
-            content = json.loads(response_text[43:-1])
-            if content and 'result' in content:
-                text = content['result']['rows']
-                return text
-        return []
+        try:
+            response_text = self.get_response_text_with_url(rect_url)
+            if response_text:
+                content = json.loads(response_text[43:-1])
+                if content and 'result' in content:
+                    text = content['result']['rows']
+                    return text
+            return []
+        except RequestException as msg:
+            self.logger.warning('[city name:{0}][exception:{1}][rect:{2}]'.format(self.city_name, msg, rect))
 
     def get_anjuke_second_hand_community_list_with_rect(self, rect):
         rect_url = self.get_anjuke_second_hand_community_list_url(rect)
-        response_text = self.get_response_text_with_url(rect_url)
-        if response_text:
-            content = json.loads(response_text)
-            if content and 'val' in content:
-                text = content['val']['comms']
-                return text
-        return []
+        try:
+            response_text = self.get_response_text_with_url(rect_url)
+            if response_text:
+                content = json.loads(response_text)
+                if content and 'val' in content:
+                    text = content['val']['comms']
+                    return text
+            return []
+        except RequestException as msg:
+            self.logger.warning('[city name:{0}][exception:{1}][rect:{2}]'.format(self.city_name, msg, rect))
 
     def get_anjuke_second_hand_community_list_url(self, rect):
         city_name_pinyin = ''.join(lazy_pinyin(self.city_name))
