@@ -22,7 +22,7 @@ def is_windows_system():
 def get_file_path(city_name, data_type, source_name, data_label):
     date = get_date()
     city_name_pinyin = ''.join(lazy_pinyin(city_name))
-    path = os.path.join(os.path.dirname(os.getcwd()), 'poi', 'poi_data', str(date), city_name_pinyin, data_type)
+    path = os.path.join(os.path.dirname(os.getcwd()), 'poi_data', str(date), city_name_pinyin, data_type)
     if not os.path.exists(path):
         os.makedirs(path)
     file_path = path + '\{}_{}_{}_{}.tsv'.format(city_name_pinyin, source_name, data_label, date)
