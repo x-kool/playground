@@ -3,7 +3,6 @@ import os
 import time
 from pypinyin import lazy_pinyin
 
-from crawler.crawler_enum import CrawlerDataType
 from util import is_windows_system
 
 
@@ -30,7 +29,7 @@ class FinalLogger:
         # base info
         date = time.strftime("%Y_%m_%d", time.localtime())
         city_name_pinyin = ''.join(lazy_pinyin(city_name))
-        path = os.path.join(os.path.dirname(os.getcwd()), CrawlerDataType.RAW_DATA.value, city_name_pinyin, str(date))
+        path = os.path.join(os.path.dirname(os.getcwd()), 'poi', 'poi_data', str(date))
         log_file_path = os.path.join(path, FinalLogger.log_file_name)
         # log conf
         FinalLogger.log_file = log_file_path if is_windows_system() else log_file_path.replace('\\', '/')

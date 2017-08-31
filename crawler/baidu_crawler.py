@@ -38,16 +38,13 @@ class BaiduCrawler(BaseCrawler):
                                                                                                     msg))
         return data_dict_list_for_poi
 
+    @retry(stop_max_attempt_number=10)
     def get_baidu_poi_list(self, category, rect):
         poi_url = self.get_baidu_poi_url(category, rect)
-        try:
-            response = requests.get(poi_url, timeout=TIMEOUT)
-            response_json = response.json()
-            return response_json['results']
-        except:
-            raise ConnectionError
+        response = requests.get(poi_url, timeout=TIMEOUT)
+        response_json = response.json()
+        return response_json['results']
 
-    @retry(stop_max_attempt_number=10)
     def get_baidu_poi_url(self, category, rect):
         formed_rect = self.get_baidu_poi_rect_form(rect)
         poi_url = baidu_poi_url_pattern.format(category, formed_rect, BAIDU_API_AK)

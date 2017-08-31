@@ -1,4 +1,5 @@
 import json
+from json import JSONDecodeError
 import time
 from pypinyin import lazy_pinyin
 from requests import RequestException
@@ -50,27 +51,38 @@ class AnjukeCrawler(BaseCrawler):
         rect_url = anjuke_new_community_url_pattern.format(*rect)
         try:
             response_text = self.get_response_text_with_url(rect_url)
-            if response_text:
-                content = json.loads(response_text[43:-1])
-                if content and 'result' in content:
-                    text = content['result']['rows']
-                    return text
-            return []
         except RequestException as msg:
-            self.logger.warning('[city name:{0}][exception:{1}][rect:{2}]'.format(self.city_name, msg, rect))
+            self.logger.warning('[city name:{0}][exception:{1}][rect:{2}][url:{3}]'.format(self.city_name, msg, rect, rect_url))
+            return []
+        try:
+            content = json.loads(response_text[43:-1])
+        except JSONDecodeError as msg:
+            self.logger.warning(
+                '[city name:{0}][exception:{1}][rect:{2}][decode text:{3}]'.format(self.city_name, msg, rect, response_text))
+            return []
+        if content and 'result' in content:
+            text = content['result']['rows']
+            return text
+        return []
 
     def get_anjuke_second_hand_community_list_with_rect(self, rect):
         rect_url = self.get_anjuke_second_hand_community_list_url(rect)
         try:
             response_text = self.get_response_text_with_url(rect_url)
-            if response_text:
-                content = json.loads(response_text)
-                if content and 'val' in content:
-                    text = content['val']['comms']
-                    return text
-            return []
         except RequestException as msg:
             self.logger.warning('[city name:{0}][exception:{1}][rect:{2}]'.format(self.city_name, msg, rect))
+            return []
+        try:
+            content = json.loads(response_text)
+        except JSONDecodeError as msg:
+            self.logger.warning(
+                '[city name:{0}][exception:{1}][rect:{2}][decode text:{3}]'.format(self.city_name, msg, rect,
+                                                                                   response_text))
+            return []
+        if content and 'val' in content:
+                text = content['val']['comms']
+                return text
+        return []
 
     def get_anjuke_second_hand_community_list_url(self, rect):
         city_name_pinyin = ''.join(lazy_pinyin(self.city_name))

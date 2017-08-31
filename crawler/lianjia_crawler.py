@@ -1,6 +1,7 @@
 import json
 import re
 import time
+from json import JSONDecodeError
 from requests import RequestException
 
 from constant import lianjia_new_community_url_pattern, cq_url_for_lianjia_city_list, \
@@ -51,13 +52,18 @@ class LianjiaCrawler(BaseCrawler):
         rect_url = lianjia_second_hand_community_url_pattern.format(rect[0], rect[2], rect[1], rect[3])
         try:
             response_text = self.get_response_text_with_url(rect_url)
-            if response_text:
-                text_json = json.loads(response_text[43:-1])
-                if text_json and 'data' in text_json.keys():
-                    return text_json['data']
-            return []
         except RequestException as msg:
             self.logger.warning('[city name:{0}][exception:{1}][rect:{2}]'.format(self.city_name, msg, rect))
+            return []
+        try:
+            text_json = json.loads(response_text[43:-1])
+        except JSONDecodeError as msg:
+            self.logger.warning('[city name:{0}][exception:{1}][decode text:{2}]'.format(self.city_name, msg, response_text))
+            return []
+        if text_json and 'data' in text_json.keys():
+            return text_json['data']
+        return []
+
 
     def write_second_community_raw_data_in_rect_to_file(self, raw_data_list):
         write_file_path = get_file_path(self.city_name,
@@ -69,13 +75,18 @@ class LianjiaCrawler(BaseCrawler):
     def get_lianjia_new_community_data_with_url(self, url):
         try:
             text = self.get_response_text_with_url(url)
-            if text:
-                data = json.loads(text[20:-1])
-                if data and 'data' in data.keys():
-                    return data['data']
-            return []
         except RequestException as msg:
             self.logger.warning('[city name:{0}][exception:{1}][url:{2}]'.format(self.city_name, msg, url))
+            return []
+        try:
+            data = json.loads(text[20:-1])
+        except JSONDecodeError as msg:
+            self.logger.warning('[city name:{0}][exception:{1}][decode text:{2}]'.format(self.city_name, msg, text))
+            return []
+        if data and 'data' in data.keys():
+            return data['data']
+        return []
+
 
     def get_city_url_for_lianjia(self):
         short_city_name = self.get_short_city_name_for_lianjia_new_community()
@@ -85,15 +96,17 @@ class LianjiaCrawler(BaseCrawler):
     def get_short_city_name_for_lianjia_new_community(self):
         try:
             text =self.get_response_text_with_url(cq_url_for_lianjia_city_list)
-            pattern = re.compile('<li><a href="//(.*?).fang.lianjia.com/ditu/" data-xftrack="10140">(.*?)</a></li>')
-            cities = re.findall(pattern, text)
-            city_dict = {}
-            for city in cities:
-                city_dict[city[1]] = (city[0])
-            city_dict['重庆'] = 'cq'
-            return city_dict[self.city_name]
         except RequestException as msg:
             self.logger.warning('[city name:{0}][exception:{1}]'.format(self.city_name, msg))
+            raise RequestException
+        pattern = re.compile('<li><a href="//(.*?).fang.lianjia.com/ditu/" data-xftrack="10140">(.*?)</a></li>')
+        cities = re.findall(pattern, text)
+        city_dict = {}
+        for city in cities:
+            city_dict[city[1]] = (city[0])
+        city_dict['重庆'] = 'cq'
+        return city_dict[self.city_name]
+
 
 # '''
 if __name__ == '__main__':

@@ -57,22 +57,19 @@ class BaseCrawler(object):
         pool.join()
 
     def write_to_file(self, header, file_path, raw_data_list):
-        try:
-            for raw_data in raw_data_list:
-                raw_data_value_list = []
-                for key_name in header:
-                    if key_name not in raw_data.keys():
-                        raw_data[key_name] = 'nan'
-                    raw_data_value_list.append(raw_data[key_name])
+        for raw_data in raw_data_list:
+            raw_data_value_list = []
+            for key_name in header:
+                if key_name not in raw_data.keys():
+                    raw_data[key_name] = 'nan'
+                raw_data_value_list.append(raw_data[key_name])
 
-                data_value = tablib.Dataset(raw_data_value_list)
-                data_key = tablib.Dataset(header)
-                if not os.path.exists(file_path):
-                    with open(file_path, 'a+', encoding='utf-8') as f:
-                        f.write(str(data_key.tsv))
-                        f.write(str(data_value.tsv))
-                else:
-                    with open(file_path, 'a+', encoding='utf-8') as f:
-                        f.write(str(data_value.tsv))
-        except Exception as msg:
-            self.logger.warning('in [{0}] with [{1}]'.format(file_path, msg))
+            data_value = tablib.Dataset(raw_data_value_list)
+            data_key = tablib.Dataset(header)
+            if not os.path.exists(file_path):
+                with open(file_path, 'a+', encoding='utf-8') as f:
+                    f.write(str(data_key.tsv))
+                    f.write(str(data_value.tsv))
+            else:
+                with open(file_path, 'a+', encoding='utf-8') as f:
+                    f.write(str(data_value.tsv))

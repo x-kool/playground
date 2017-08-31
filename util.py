@@ -15,18 +15,18 @@ def get_date(format="%Y_%m_%d"):
     return date
 
 
-def isWindowsSystem():
+def is_windows_system():
     return 'Windows' in platform.system()
 
 
 def get_file_path(city_name, data_type, source_name, data_label):
     date = get_date()
     city_name_pinyin = ''.join(lazy_pinyin(city_name))
-    path = os.path.join(os.path.dirname(os.getcwd()), data_type, city_name_pinyin, str(date))
+    path = os.path.join(os.path.dirname(os.getcwd()), 'poi', 'poi_data', str(date), city_name_pinyin, data_type)
     if not os.path.exists(path):
         os.makedirs(path)
     file_path = path + '\{}_{}_{}_{}.tsv'.format(city_name_pinyin, source_name, data_label, date)
-    if not isWindowsSystem():
+    if not is_windows_system():
         Linux_file_path = file_path.replace('\\', '/')
         return Linux_file_path
     return file_path
