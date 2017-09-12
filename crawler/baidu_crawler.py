@@ -4,7 +4,7 @@ from requests import RequestException
 from retrying import retry
 
 from constant import BAIDU_POI_CATEGORIES, TIMEOUT, baidu_poi_url_pattern, BAIDU_API_AK, THREAD_NUM, \
-    BAIDU_POI_RAW_DATA_HEADER_LIST
+    BAIDU_POI_RAW_DATA_HEADER_LIST, BAIDU_POI_CATEGORY_FOR_UID
 from crawler.base_crawler import BaseCrawler
 from crawler.crawler_enum import CrawlerDataType, CrawlerSourceName, CrawlerDataLabel
 from util import get_file_path
@@ -24,7 +24,8 @@ class BaiduCrawler(BaseCrawler):
 
     def crawl_poi_raw_data_with_rect(self, rect):
         data_dict_list_for_poi = []
-        for category in BAIDU_POI_CATEGORIES:
+        #for category in BAIDU_POI_CATEGORIES:
+        for category in BAIDU_POI_CATEGORY_FOR_UID:
             try:
                 poi_list = self.get_baidu_poi_list(category, rect)
                 for poi in poi_list:

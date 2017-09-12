@@ -64,7 +64,6 @@ class LianjiaCrawler(BaseCrawler):
             return text_json['data']
         return []
 
-
     def write_second_community_raw_data_in_rect_to_file(self, raw_data_list):
         write_file_path = get_file_path(self.city_name,
                                         CrawlerDataType.RAW_DATA.value,
@@ -86,7 +85,6 @@ class LianjiaCrawler(BaseCrawler):
         if data and 'data' in data.keys():
             return data['data']
         return []
-
 
     def get_city_url_for_lianjia(self):
         short_city_name = self.get_short_city_name_for_lianjia_new_community()
@@ -115,6 +113,8 @@ if __name__ == '__main__':
     # crawler.crawl_lianjia_second_hand_community_raw_data()
     # crawler.crawl_lianjia_new_community_raw_data()
     crawler.crawl_lianjia_raw_data()
+    # lng, lat = crawler.get_city_center_lng_lat_by_city_name('天津')
+    # print (lng,lat)
     end = time.clock()
     print('运行时间：%-.2f s' % (end - start))
     # '''
